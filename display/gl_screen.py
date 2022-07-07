@@ -1,49 +1,47 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce : TODO
+@Introduce : General OpenGL application class, that follows a certain drawing pipeline
 @File      : gl_screen.py
 @Project   : pygletPlayground
 @Time      : 02.10.21 13:00
 @Author    : flowmeadow
 """
-import sys
 from abc import ABCMeta, abstractmethod
-from typing import List
 
 import numpy as np
-from camera.camera import Camera
 from pyglet.gl import *
 
+from camera.camera import Camera
 from display.base import Base
-from transformations.methods import get_P
-
-
-def to_matrix(val):
-    return np.array(val).reshape(4, 4)
 
 
 class GLScreen(Base):
+    """
+    General OpenGL application class, that follows a certain drawing pipeline
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, **kwargs):
+        """
+        :param kwargs: forwarded keyword arguments
+        """
         # TODO: How to deal with debug mode
-        # do NOT allow fullscreen only in debug mode
+        #       do NOT allow fullscreen only in debug mode
+        #       Enable mouse in debug mode (e.g. camera.fly_motion)
         # gettrace = getattr(sys, "gettrace", None)
         # if gettrace():
         #     kwargs["fullscreen"] = False
 
         super().__init__(**kwargs)
 
-        # TODO: Optional?
-        self._projection_matrix = (GLfloat * 16)()
-        self._view_matrix = (GLfloat * 16)()
-        self.inverse_matrix = np.identity(4, dtype=GLfloat)
-
         # initialize camera
         self.cam = Camera()
 
     def init_gl(self):
+        """
+        Initialize OpenGL settings
+        """
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -51,9 +49,11 @@ class GLScreen(Base):
         glEnable(GL_MULTISAMPLE)
 
     def draw_frame(self):
+        """
+        Run drawing pipeline
+        """
         # initialize perspective
         glLoadIdentity()
-        # glViewport(0, 0, 1920, 1080)
         gluPerspective(45, (self.width / self.height), 0.1, 50.0)
 
         # configure OpenGL settings
@@ -68,7 +68,7 @@ class GLScreen(Base):
 
         # handle the gathered events if necessary (empty by default)
         self.cam.update(self)
-        self.handle_events()  # TODO still needed?
+        self.handle_events()
         glFlush()
 
         # initialize camera
@@ -124,7 +124,7 @@ class GLScreen(Base):
     @abstractmethod
     def draw_screen(self) -> None:
         """
-        draw objects onto the screen
+        draw objects onto the screen (e.g. GUI, text, images).
         :return: None
         """
         pass

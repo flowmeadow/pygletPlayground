@@ -6,11 +6,8 @@
 @Time      : 09.09.21 22:55
 @Author    : flowmeadow
 """
-from typing import List, Tuple
-
 import numpy as np
-from display.gl_screen import GLScreen
-from pyglet.gl import *
+import pyglet.window
 from pyglet.window import key as gl_key
 from transformations.methods import rotate_vec
 
@@ -39,11 +36,19 @@ class FlyMotion(Camera):
         window.set_exclusive_mouse(True)
         super().__init__(**kwargs)
 
-    def update(self, window):
+    def update(self, window: pyglet.window.Window):
+        """
+        Updates the camera attributes based on user inputs
+        :param window: current window object
+        :return:
+        """
         self.update_mouse_movement()
         self.update_key_movement()
 
     def update_key_movement(self):
+        """
+        Updates camera position based on keyboard inputs
+        """
         keys = self._keys
         for key in keys:
             if key in [gl_key.UP, gl_key.W]:
@@ -60,6 +65,9 @@ class FlyMotion(Camera):
                 self.camera_pos -= 0.01 * side_vec  # go left
 
     def update_mouse_movement(self):
+        """
+        update camera rotation based on mouse position
+        """
         mouse = self._mouse
 
         # look up/down
@@ -77,8 +85,6 @@ class FlyMotion(Camera):
                 axis=self.camera_up,
                 angle=-mouse.dx * 0.05,
             )
-
-
 
         # reset mouse
         mouse.reset()

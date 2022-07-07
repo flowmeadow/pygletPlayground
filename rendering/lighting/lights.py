@@ -7,8 +7,9 @@
 @Author    : flowmeadow
 """
 
-from rendering.lighting.light import Light
 from pyglet.gl import *
+
+from rendering.lighting.light import Light
 
 
 class Lights:

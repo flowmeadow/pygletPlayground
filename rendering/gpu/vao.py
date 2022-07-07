@@ -7,11 +7,11 @@
 @Author    : flowmeadow
 """
 
+import ctypes as ct
 from typing import Optional
 
 import numpy as np
 from pyglet.gl import *
-import ctypes as ct
 
 
 class VAO:
@@ -60,19 +60,6 @@ class VAO:
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, byte_length, c_data, GL_STATIC_DRAW)
         glBindVertexArray(0)
 
-    def __del__(self) -> None:
-        """
-        Delete VBOs and VAO
-        """
-        # TODO: Again... not working
-        # glDeleteBuffers(1, self.ibo)
-        # glDeleteBuffers(1, self.ibo)
-        # glDeleteBuffers(1, ct.pointer(self.ibo))
-        # glDeleteBuffers(1, self.vbo)
-        # glDeleteBuffers(1, [self.cbo])
-        # glDeleteBuffers(1, [self.nbo])
-        # glDeleteVertexArrays(1, self.vao)
-
     def set_vbo(self, attr_name: str, data: np.array) -> None:
         """
         Assign vertex attributes to VAO
@@ -119,16 +106,6 @@ class VAO:
         glBindVertexArray(self.vao)
         glDrawElements(self.object_id, num_indices, GL_UNSIGNED_INT, ct.c_void_p(offset * self.index_size))
         glBindVertexArray(0)
-
-    def draw_vertices(self, num_indices: Optional[int] = None, offset: int = 0):
-        """
-
-        :param num_indices:
-        :param offset:
-        :return:
-        """
-
-
 
     @staticmethod
     def assign_vbo_data(data: np.array) -> None:

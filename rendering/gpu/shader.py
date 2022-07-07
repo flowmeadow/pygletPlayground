@@ -6,14 +6,12 @@
 @Time      : 31.08.21 23:49
 @Author    : flowmeadow
 """
-import os
-
-from pyglet.gl import *
-# from OpenGL.GL import shaders
-# from OpenGL.GLUT import *
 import ctypes as ct
-import numpy as np
+import os
 import time
+
+import numpy as np
+from pyglet.gl import *
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,13 +21,14 @@ class Shader:
     Handles loading, linking and use of GLSL shaders
     """
 
-    def __init__(self, shader_name: str, model_base="base", num_lights=1):
+    def __init__(self, shader_name: str, model_base: str = "base", num_lights: int = 1):
         """
         Create program and compile shader
-        :param shader_name: file name of the shader without extension.
-                A '*.vert' and '*.frag' file of the same name must be available.
+        :param shader_name: filename of the shader without extension. A '*.vert' and '*.frag' file must be available.
+        :param model_base: parent directory of the shader. Other models might require different shaders (e.g. material)
+        :param num_lights: number of light sources
         """
-        self.start_time = time.time()
+        self.start_time = time.time()  # define time constant
 
         self.model_base = model_base
         self.program = glCreateProgram()
@@ -50,7 +49,6 @@ class Shader:
             raise ValueError("Fragment shader could not be loaded")
 
         # compile program
-        # self.program = shaders.compileProgram(vs, fs, **dict(validate=True))
         self.program = glCreateProgram()
         glAttachShader(self.program, vs)
         glAttachShader(self.program, fs)
@@ -58,40 +56,23 @@ class Shader:
         # link program
         glLinkProgram(self.program)
 
-        # check link status
-        status = ct.c_int(0)
-
-        # TODO: Nothing works here
-        # glGetShaderiv(self.program, GL_LINK_STATUS, ct.byref(status))
-        # if not status:
-        #     log = ct.create_string_buffer(status.value)
-        #     # retrieve the log text
-        #     glGetShaderInfoLog(self.program, status, None, log)  # TODO not working
-        #     raise Exception(log)
-
+        # not needed anymore
         glDeleteShader(vs)
         glDeleteShader(fs)
 
         # set uniforms
-        self.model_matrix_loc = glGetUniformLocation(self.program, "modelMatrix".encode('ascii'))
-        self.camera_pos_loc = glGetUniformLocation(self.program, "cameraPos".encode('ascii'))
-        self.camera_view_loc = glGetUniformLocation(self.program, "cameraView".encode('ascii'))
+        self.model_matrix_loc = glGetUniformLocation(self.program, "modelMatrix".encode("ascii"))
+        self.camera_pos_loc = glGetUniformLocation(self.program, "cameraPos".encode("ascii"))
+        self.camera_view_loc = glGetUniformLocation(self.program, "cameraView".encode("ascii"))
 
-        self.time_loc = glGetUniformLocation(self.program, "iTime".encode('ascii'))
+        self.time_loc = glGetUniformLocation(self.program, "iTime".encode("ascii"))
 
-        num_lights_loc = glGetUniformLocation(self.program, "iLights".encode('ascii'))
+        num_lights_loc = glGetUniformLocation(self.program, "iLights".encode("ascii"))
 
         # start configuration
         self.use()
         glUniform1ui(num_lights_loc, ct.c_uint(num_lights))  # set number of light sources
         self.un_use()
-
-    def __del__(self):
-        """
-        Delete program
-        """
-        # TODO: Not working
-        # glDeleteProgram(self.program)
 
     def use(self) -> None:
         """
@@ -107,17 +88,18 @@ class Shader:
         glUseProgram(0)
 
     @staticmethod
-    def load_shader(src: str, shader_type: int, file_path: str) -> int:
+    def load_shader(src: str, shader_type: int, file_path: str = None) -> int:
         """
         Compile a shader
         :param src: text of the shader file
         :param shader_type: type of the shader (GL_VERTEX_SHADER or GL_FRAGMENT_SHADER)
+        :param file_path: filepath to the shader file. Used for debugging only
         :return: shader id
         """
-        extensions = {GL_FRAGMENT_SHADER: 'frag', GL_VERTEX_SHADER: 'vert'}
+        extensions = {GL_FRAGMENT_SHADER: "frag", GL_VERTEX_SHADER: "vert"}
 
         # convert source text
-        c_text = (ct.c_char_p * len(src))(*[line.encode('utf-8') for line in src])
+        c_text = (ct.c_char_p * len(src))(*[line.encode("utf-8") for line in src])
 
         # create shader
         shader = glCreateShader(shader_type)
@@ -129,16 +111,21 @@ class Shader:
         # check shader status
         status = ct.c_int(0)
         glGetShaderiv(shader, GL_COMPILE_STATUS, ct.byref(status))
+
         if not status:
-            log = ct.create_string_buffer(status.value)
             # retrieve the log text
-            glGetShaderInfoLog(shader, status, None, log)  # TODO not working
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, ct.byref(status))
+            log = ct.create_string_buffer(status.value)
+            glGetShaderInfoLog(shader, status, None, log)
+            log_text = log.value.decode("utf-8")
 
             glDeleteShader(shader)
-            raise ImportError(f"{file_path}.{extensions[shader_type]}:\n {log.value}")
+
+            file_name = file_path.split("/")[-1] if file_path else "unknown"
+            raise ImportError(f"{file_name}.{extensions[shader_type]}:\n\n{log_text}")
         return shader
 
-    def update_model_matrix(self, matrix: np.array) -> None:
+    def update_model_matrix(self, matrix: np.array):
         """
         Updates the uniform modelMatrix attribute
         :param matrix: transformation matrix [4, 4]
@@ -148,13 +135,21 @@ class Shader:
         glUniformMatrix4fv(self.model_matrix_loc, 1, False, (ct.c_float * 16)(*mat))
         self.un_use()
 
-    def update_camera(self, camera_pos, camera_view):
+    def update_camera(self, camera_pos: np.ndarray, camera_view: np.ndarray):
+        """
+        update camera attributes
+        :param camera_pos: camera position array (3,)
+        :param camera_view: camera view direction array (3,)
+        """
         self.use()
         glUniform3f(self.camera_pos_loc, *np.array(camera_pos, dtype=np.float32).flatten("F"))
         glUniform3f(self.camera_view_loc, *np.array(camera_view, dtype=np.float32).flatten("F"))
         self.un_use()
 
     def update_time(self):
+        """
+        update runtime in milliseconds
+        """
         self.use()
         t = int(1000 * (time.time() - self.start_time))
         glUniform1ui(self.time_loc, t)

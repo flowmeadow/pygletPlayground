@@ -8,9 +8,12 @@
 """
 from abc import ABCMeta, abstractmethod
 from typing import Tuple, Union
-from transformations.methods import construct_T
+
 import numpy as np
+import pyglet.window
+
 from rendering.methods import draw_cam
+from transformations.methods import construct_T
 
 
 class Camera:
@@ -41,27 +44,32 @@ class Camera:
         self._camera_up = self._update_camera_up()
 
     def _update_camera_up(self):
-        nvec = np.cross(self.camera_view, np.array([0., 0., 1.]))
+        nvec = np.cross(self.camera_view, np.array([0.0, 0.0, 1.0]))
         nvec = nvec / np.linalg.norm(nvec)
         uvec = np.cross(nvec, self.camera_view)
         return uvec
 
-    def copy_from(self, cam: object):
+    def copy_from(self, cam: object):  # TODO: how to reference base class object from child for type hints
         """
-        TODO
-        :param cam:
-        :return:
+        Copy the pose from another Camera object and
+        :param cam: Camera object
         """
         self.camera_pos = cam.camera_pos
         self.camera_view = cam.camera_view
         self.camera_up = cam.camera_up
 
     def draw(self):
+        """
+        Draw camera to scene
+        """
         draw_cam(self.camera_pos, self.rot_mat(), radius=0.2)
 
     @abstractmethod
-    def update(self, window) -> None:
-        pass
+    def update(self, window: pyglet.window.Window) -> None:
+        """
+        Overwrite in child to change cam during run time
+        :param window: current window object
+        """
 
     @property
     def camera_pos(self) -> np.array:
@@ -109,10 +117,10 @@ class Camera:
         self._camera_up = arr / np.linalg.norm(arr)  # normalize vector
         self._camera_up = arr
 
-    def rot_mat(self):
+    def rot_mat(self) -> np.ndarray:
         """
-        TODO
-        :return:
+        return the rotation matrix from world to camera coordinates
+        :return: rotation matrix as numpy array (3, 3)
         """
         x_c = np.cross(self.camera_view, self.camera_up)
         y_c = self.camera_up
@@ -126,10 +134,3 @@ class Camera:
         :return:
         """
         return construct_T(self.rot_mat(), self.camera_pos)
-
-
-
-
-
-
-

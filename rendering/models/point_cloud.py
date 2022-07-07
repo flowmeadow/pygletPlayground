@@ -14,6 +14,10 @@ from pyglet.gl import *
 
 
 class PointCloud:
+    """
+    Simple point cloud object
+    """
+
     def __init__(self, points: np.ndarray, colors: Optional[np.ndarray] = None, point_size: int = 10):
         """
         Object that draws several 3D points as dots into the scene
@@ -28,7 +32,7 @@ class PointCloud:
 
     def draw(self):
         """
-
+        draw the points into the scene
         :return:
         """
         glEnable(GL_POINT_SMOOTH)

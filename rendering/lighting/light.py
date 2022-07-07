@@ -6,9 +6,11 @@
 @Time      : 10.09.21 12:52
 @Author    : flowmeadow
 """
-from pyglet.gl import *
 import ctypes
+
 import numpy as np
+from pyglet.gl import *
+
 from rendering.methods import draw_light
 
 update_dict = {

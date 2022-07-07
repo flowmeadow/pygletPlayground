@@ -13,9 +13,9 @@ import numpy as np
 from pyglet.gl import *
 
 
-def rot_mat(axis: np.array, angle: float) -> np.array:
+def rot_mat(axis: np.ndarray, angle: float) -> np.ndarray:
     """
-    TODO
+    build rotation matrix from axis and angle
     :param axis: axis to rotate around [3,]
     :param angle: angle of rotation in degrees
     :return: rotated vector
@@ -34,7 +34,7 @@ def rot_mat(axis: np.array, angle: float) -> np.array:
     return rot_transform
 
 
-def rotate_vec(vec: np.array, axis: np.array, angle: float) -> np.array:
+def rotate_vec(vec: np.ndarray, axis: np.ndarray, angle: float) -> np.ndarray:
     """
     Rotate a vector or an array of vectors along an axis given an angle
     :param vec: vector [3,] or array of vectors [n, 3] to rotate
@@ -50,11 +50,9 @@ def rotate_vec(vec: np.array, axis: np.array, angle: float) -> np.array:
     return result
 
 
-
-
-
 def rotation_matrix_from_vectors(vec1: np.ndarray, vec2: np.ndarray):
-    """ Find the rotation matrix that aligns vec1 to vec2
+    """
+    Find the rotation matrix that aligns vec1 to vec2
     :param vec1: A 3d "source" vector
     :param vec2: A 3d "destination" vector
     :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
@@ -68,7 +66,7 @@ def rotation_matrix_from_vectors(vec1: np.ndarray, vec2: np.ndarray):
     return rotation_matrix
 
 
-def compute_normals(indices: np.array, vertices: np.array) -> np.array:
+def compute_normals(indices: np.ndarray, vertices: np.ndarray) -> np.ndarray:
     """
     Given a vertex and index array, the normals for each vertex are computed.
     First the face normals will be calculated. For each vertex the normal results from
@@ -77,7 +75,6 @@ def compute_normals(indices: np.array, vertices: np.array) -> np.array:
     :param vertices: vertex array [n, 3]
     :return: normal array [n, 3]
     """
-    # TODO: not implemented for GL_QUADS
     # compute triangle normals by building the cross product of two edges
     triangle_vertices = vertices[indices]
     edge_1 = triangle_vertices[:, 0, :] - triangle_vertices[:, 1, :]
@@ -106,7 +103,6 @@ def flip_inside_out(indices: np.array) -> np.array:
     :param indices: indices array [m, 3]
     :return: indices array [m, 3]
     """
-    # TODO: not implemented for GL_QUADS
     new_indices = indices.copy()
     new_indices[:, 1], new_indices[:, 2] = indices[:, 2], indices[:, 1]
     return new_indices
@@ -136,7 +132,7 @@ def get_M() -> np.ndarray:
     return M
 
 
-def get_K(P: np.array, screen_size: Tuple[int, int]) -> np.ndarray:
+def get_K(P: np.ndarray, screen_size: Tuple[int, int]) -> np.ndarray:
     """
 
     :param P: camera projection matrix as numpy array (4, 4)
@@ -155,10 +151,12 @@ def get_K(P: np.array, screen_size: Tuple[int, int]) -> np.ndarray:
     return K
 
 
-def construct_T(rot_mat, trans_vec):
+def construct_T(rot_mat: np.ndarray, trans_vec: np.ndarray) -> np.ndarray:
     """
-    TODO
-    :return:
+    Combines rotation matrix and translation vector to transformation matrix
+    :param rot_mat: array (3, 3)
+    :param trans_vec: array (3,)
+    :return: array (4, 4)
     """
     T = np.eye(4)
     T[:3, :3] = rot_mat
