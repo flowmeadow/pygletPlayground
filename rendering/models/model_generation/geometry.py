@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce :
+@Introduce : TODO WIP
 @File      : geometry.py
 @Time      : 10.09.21 10:50
 @Author    : flowmeadow
@@ -9,10 +9,6 @@
 from typing import Tuple
 
 import numpy as np
-
-
-def base(*args, **kwargs) -> Tuple[np.array, np.array]:
-    raise NotImplementedError("This is only a method definition")
 
 
 def cube(size=1, refinement_steps=0):
@@ -177,4 +173,4 @@ def cylinder(radius: float = 0.1, height: float = 0.2, angle_steps: int = 32, he
             offset_2 = (angle_steps + 1) * (h + 1)
             indices.append([offset_1 + i, offset_2 + i % angle_steps + 1, offset_1 + i % angle_steps + 1])
             indices.append([offset_1 + i, offset_2 + i, offset_2 + i % angle_steps + 1])
-    return vertices, indices
+    return np.array(vertices), np.array(indices)

@@ -13,7 +13,7 @@ from display.gl_screen import GLScreen
 from rendering.lighting.lights import Lights
 from rendering.methods import draw_coordinates, draw_text_2D
 from rendering.models.model import Model
-from rendering.models.model_generation.geometry import sphere
+from rendering.models.model_generation.geometry import sphere, cube, cylinder
 
 
 class MyScreen(GLScreen):
@@ -56,13 +56,33 @@ class MyScreen(GLScreen):
 
         # define sphere model
         vertices, indices = sphere(refinement_steps=4)
-        self.obj = Model(
+        self.sphere = Model(
             vertices=vertices,
             indices=indices,
             shader_name=self.shaders,
             color=(0.0, 0.4, 1.0),
-            scale=1.0,
             rotation=(1.0, 0.0, 0.0, 90.0),
+            translation=(0.0, 0.0, 0.1),
+            num_lights=self.lights.num_lights,
+        )
+        vertices, indices = cube(refinement_steps=3)
+        self.cube = Model(
+            vertices=vertices,
+            indices=indices,
+            shader_name=self.shaders,
+            color=(0.6, 0.4, 0.1),
+            scale=0.1,
+            rotation=(0.0, 0.0, 1.0, 45.0),
+            num_lights=self.lights.num_lights,
+        )
+
+        vertices, indices = cylinder()
+        self.cylinder = Model(
+            vertices=vertices,
+            indices=indices,
+            shader_name=self.shaders,
+            color=(0.2, 0.8, 0.1),
+            translation=(0.0, 0.5, 0.0),
             num_lights=self.lights.num_lights,
         )
 
@@ -71,7 +91,7 @@ class MyScreen(GLScreen):
         handle pygame events and do other stuff before drawing
         :return: None
         """
-        self.obj.update_camera(self.cam.camera_pos, self.cam.camera_view)  # update camera based on user inputs
+        self.sphere.update_camera(self.cam.camera_pos, self.cam.camera_view)  # update camera based on user inputs
         pass
 
     def draw_world(self) -> None:
@@ -92,11 +112,18 @@ class MyScreen(GLScreen):
 
         self.lights.draw()
 
-        # move ball
+        # transform sphere
         z = np.abs(np.sin(self.frame_count * 0.01)) / 2
-        self.obj.translate(0.0, 0.0, z)
-        self.obj.scale(1.0, 1.0, 1.0 - z)
-        self.obj.draw(shader_name=self.current_shader)
+        self.sphere.translate(0.0, 0.0, z)
+        self.sphere.draw(shader_name=self.current_shader)
+
+        # transform cube
+        self.cube.draw(shader_name=self.current_shader)
+        self.cube.translate(0.5, 0.0, 0.1)
+        self.cube.rotate(self.frame_count * 0.2, 0.0, 0.0, 1.0)
+
+        self.cylinder.draw(shader_name=self.current_shader)
+        self.cylinder.scale(1.0, 1.0, 1.0 - z)
 
         # update frame counter
         self.frame_count += 1

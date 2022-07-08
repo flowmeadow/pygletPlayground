@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce :
+@Introduce : Manages several OpenGL light sources
 @File      : lights.py
 @Time      : 15.09.21 16:47
 @Author    : flowmeadow
@@ -13,7 +13,10 @@ from rendering.lighting.light import Light
 
 
 class Lights:
-    light_ids = {
+    """
+    Manages several OpenGL light sources
+    """
+    _light_ids = {
         0: GL_LIGHT0,
         1: GL_LIGHT1,
         2: GL_LIGHT2,
@@ -25,24 +28,34 @@ class Lights:
     }
 
     def __init__(self):
+        """ Initialize """
         self.num_lights = 0
         self.lights = []
 
     def add(self, **kwargs):
-        light_id = self.light_ids[self.num_lights]
+        """
+        Adds a new light source
+        :param kwargs: forwarded keyword arguments
+        """
+        # create a new light object
+        light_id = self._light_ids[self.num_lights]
         self.num_lights += 1
         self.lights.append(Light(light_id, **kwargs))
 
-    def update(self, *args, **kwargs):
-        for light in self.lights:
-            light.update(*args, **kwargs)
-
     def draw(self):
+        """
+        Draws a representation of all light sources into the scene
+        """
         for light in self.lights:
             light.draw()
 
-    def __getitem__(self, key):
-        return self.lights[key]
+    def __getitem__(self, idx: int) -> Light:
+        """
+        Returns a light object by its index
+        :param idx: Index of the light source
+        :return: light object
+        """
+        return self.lights[idx]
 
 
 
