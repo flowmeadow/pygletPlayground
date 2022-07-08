@@ -7,13 +7,12 @@
 @Author    : flowmeadow
 """
 import ctypes as ct
+import importlib
 import os
 import time
 
 import numpy as np
 from pyglet.gl import *
-
-CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 class Shader:
@@ -33,18 +32,23 @@ class Shader:
         self.model_base = model_base
         self.program = glCreateProgram()
 
-        file_path = f"{CURRENT_PATH}/../../shader/{model_base}/{shader_name}/{shader_name}"
-        # load shader file text
-        with open(f"{file_path}.vert", "r") as f:
-            vs_src = f.readlines()
-        with open(f"{file_path}.frag", "r") as f:
-            fs_src = f.readlines()
+        # file_path = f"{CURRENT_PATH}/../../shader/{model_base}/{shader_name}/{shader_name}"
+        # # load shader file text
+        # with open(f"{file_path}.vert", "r") as f:
+        #     vs_src = f.readlines()
+        # with open(f"{file_path}.frag", "r") as f:
+        #     fs_src = f.readlines()
+
+        # load shader text
+        shader_txt = importlib.import_module(f"glpg_flowmeadow.shader.{model_base}.{shader_name}.{shader_name}")
+        vs_src = shader_txt.vert_txt
+        fs_src = shader_txt.frag_txt
 
         # compile shader
-        vs = self.load_shader(vs_src, GL_VERTEX_SHADER, file_path)
+        vs = self.load_shader(vs_src, GL_VERTEX_SHADER, shader_name)
         if not vs:
             raise ValueError("Vertex shader could not be loaded")
-        fs = self.load_shader(fs_src, GL_FRAGMENT_SHADER, file_path)
+        fs = self.load_shader(fs_src, GL_FRAGMENT_SHADER, shader_name)
         if not fs:
             raise ValueError("Fragment shader could not be loaded")
 
@@ -88,12 +92,12 @@ class Shader:
         glUseProgram(0)
 
     @staticmethod
-    def load_shader(src: str, shader_type: int, file_path: str = None) -> int:
+    def load_shader(src: str, shader_type: int, file_name: str = None) -> int:
         """
         Compile a shader
         :param src: text of the shader file
         :param shader_type: type of the shader (GL_VERTEX_SHADER or GL_FRAGMENT_SHADER)
-        :param file_path: filepath to the shader file. Used for debugging only
+        :param file_name: file_name of the shader file. Used for debugging only
         :return: shader id
         """
         extensions = {GL_FRAGMENT_SHADER: "frag", GL_VERTEX_SHADER: "vert"}
@@ -121,7 +125,7 @@ class Shader:
 
             glDeleteShader(shader)
 
-            file_name = file_path.split("/")[-1] if file_path else "unknown"
+            file_name = file_name if file_name else "unknown"
             raise ImportError(f"{file_name}.{extensions[shader_type]}:\n\n{log_text}")
         return shader
 

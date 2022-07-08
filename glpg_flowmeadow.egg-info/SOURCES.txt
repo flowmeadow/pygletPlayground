@@ -34,8 +34,12 @@ glpg_flowmeadow/rendering/models/model_generation/geometry.py
 glpg_flowmeadow/shader/__init__.py
 glpg_flowmeadow/shader/base/__init__.py
 glpg_flowmeadow/shader/base/blinn_phong/__init__.py
+glpg_flowmeadow/shader/base/blinn_phong/blinn_phong.py
 glpg_flowmeadow/shader/base/flat/__init__.py
+glpg_flowmeadow/shader/base/flat/flat.py
 glpg_flowmeadow/shader/base/gouraud/__init__.py
+glpg_flowmeadow/shader/base/gouraud/gouraud.py
 glpg_flowmeadow/shader/base/toon/__init__.py
+glpg_flowmeadow/shader/base/toon/toon.py
 glpg_flowmeadow/transformations/__init__.py
 glpg_flowmeadow/transformations/methods.py
