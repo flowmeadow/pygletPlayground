@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: glpg-flowmeadow
+Version: 0.1.0
+Summary: pyglet OpenGL playground
+Home-page: https://github.com/flowmeadow/pygletPlayground
+Author: Florian Wiese
+Author-email: florian-wiese93@outlook.de
+License: MIT
+Download-URL: https://github.com/flowmeadow/pygletPlayground.git
+Keywords: pyglet,OpenGL
+Platform: UNKNOWN
+License-File: LICENSE.rst
+
+UNKNOWN
+
