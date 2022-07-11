@@ -32,17 +32,18 @@ class Shader:
         self.model_base = model_base
         self.program = glCreateProgram()
 
-        # file_path = f"{CURRENT_PATH}/../../shader/{model_base}/{shader_name}/{shader_name}"
-        # # load shader file text
-        # with open(f"{file_path}.vert", "r") as f:
-        #     vs_src = f.readlines()
-        # with open(f"{file_path}.frag", "r") as f:
-        #     fs_src = f.readlines()
-
         # load shader text
-        shader_txt = importlib.import_module(f"glpg_flowmeadow.shader.{model_base}.{shader_name}.{shader_name}")
-        vs_src = shader_txt.vert_txt
-        fs_src = shader_txt.frag_txt
+        if os.path.exists(shader_name):  # check if shader_name is a path
+            path = f"{shader_name}/{os.path.basename(shader_name)}"
+            with open(f"{path}.vert", "r") as f:
+                vs_src = f.readlines()
+            with open(f"{path}.frag", "r") as f:
+                fs_src = f.readlines()
+        else:
+            shader_txt = importlib.import_module(f"glpg_flowmeadow.shader.{model_base}.{shader_name}.{shader_name}")
+
+            vs_src = shader_txt.vert_txt
+            fs_src = shader_txt.frag_txt
 
         # compile shader
         vs = self.load_shader(vs_src, GL_VERTEX_SHADER, shader_name)
