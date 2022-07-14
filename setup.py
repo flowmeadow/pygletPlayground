@@ -7,7 +7,7 @@ REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
 print(REQUIREMENTS)
 setup(
     name="glpg_flowmeadow",
-    version="0.1.5",
+    version="0.1.6",
     license="MIT",
     packages=find_packages(include=["glpg_flowmeadow", "glpg_flowmeadow.*"]),
     install_requires=["attrs==21.4.0", "numpy==1.23.1", "pyglet==1.5.26"],

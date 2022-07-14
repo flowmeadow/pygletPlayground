@@ -142,3 +142,10 @@ class Base(pyglet.window.Window):
         :return: window size (width, height)
         """
         return self.width, self.height
+
+    def close(self):
+        """
+        Stop clock and close window
+        """
+        pyglet.clock.unschedule(self.my_draw)
+        super().close()

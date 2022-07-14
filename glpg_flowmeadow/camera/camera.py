@@ -41,13 +41,6 @@ class Camera:
         self._camera_pos = np.array(camera_pos)
         self._camera_view = camera_view / np.linalg.norm(camera_view)
         self._camera_up = camera_up / np.linalg.norm(camera_up)
-        self._camera_up = self._update_camera_up()
-
-    def _update_camera_up(self):
-        nvec = np.cross(self.camera_view, np.array([0.0, 0.0, 1.0]))
-        nvec = nvec / np.linalg.norm(nvec)
-        uvec = np.cross(nvec, self.camera_view)
-        return uvec
 
     def copy_from(self, cam: object):  # TODO: how to reference base class object from child for type hints
         """
@@ -99,7 +92,6 @@ class Camera:
         """
         arr = np.array(value)
         self._camera_view = arr / np.linalg.norm(arr)  # normalize vector
-        self._camera_up = self._update_camera_up()
 
     @property
     def camera_up(self) -> np.array:
