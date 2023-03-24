@@ -10,6 +10,7 @@ import ctypes as ct
 import importlib
 import os
 import time
+from typing import Union
 
 import numpy as np
 from pyglet.gl import *
@@ -20,10 +21,10 @@ class Shader:
     Handles loading, linking and use of GLSL shaders
     """
 
-    def __init__(self, shader_name: str, model_base: str = "base", num_lights: int = 1):
+    def __init__(self, shader: Union[int, str], model_base: str = "base", num_lights: int = 1, num_textures: int = 0):
         """
         Create program and compile shader
-        :param shader_name: filename of the shader without extension. A '*.vert' and '*.frag' file must be available.
+        :param shader: filename of the shader without extension. A '*.vert' and '*.frag' file must be available.
         :param model_base: parent directory of the shader. Other models might require different shaders (e.g. material)
         :param num_lights: number of light sources
         """
@@ -33,23 +34,35 @@ class Shader:
         self.program = glCreateProgram()
 
         # load shader text
-        if os.path.exists(shader_name):  # check if shader_name is a path
-            path = f"{shader_name}/{os.path.basename(shader_name)}"
-            with open(f"{path}.vert", "r") as f:
-                vs_src = f.readlines()
-            with open(f"{path}.frag", "r") as f:
-                fs_src = f.readlines()
-        else:
+        if isinstance(shader, str):
+            shader_path = shader
+            vs_cnt, fs_cnt = 0, 0
+            for file in os.listdir(shader_path):
+                if file.endswith(".vert"):
+                    with open(f"{shader_path}/{file}", "r") as f:
+                        vs_src = ''.join(f.readlines())
+                    vs_cnt += 1
+                if file.endswith(".frag"):
+                    with open(f"{shader_path}/{file}", "r") as f:
+                        fs_src = ''.join(f.readlines())
+                    fs_cnt += 1
+            if vs_cnt != 1 or fs_cnt != 1:
+                raise ImportError("Given directory must have exactly one vertex (.vert) and one fragment (.frag) file")
+        elif isinstance(shader, int):
+            name_list = ["flat", "gouraud", "blinn_phong", "toon"]
+            shader_name = name_list[shader]
             shader_txt = importlib.import_module(f"glpg_flowmeadow.shader.{model_base}.{shader_name}.{shader_name}")
 
             vs_src = shader_txt.vert_txt
             fs_src = shader_txt.frag_txt
+        else:
+            raise NotImplementedError()
 
         # compile shader
-        vs = self.load_shader(vs_src, GL_VERTEX_SHADER, shader_name)
+        vs = self.load_shader(vs_src, GL_VERTEX_SHADER, shader)
         if not vs:
             raise ValueError("Vertex shader could not be loaded")
-        fs = self.load_shader(fs_src, GL_FRAGMENT_SHADER, shader_name)
+        fs = self.load_shader(fs_src, GL_FRAGMENT_SHADER, shader)
         if not fs:
             raise ValueError("Fragment shader could not be loaded")
 
@@ -65,18 +78,19 @@ class Shader:
         glDeleteShader(vs)
         glDeleteShader(fs)
 
-        # set uniforms
+        # get locations and set uniforms
+        self.use()
         self.model_matrix_loc = glGetUniformLocation(self.program, "modelMatrix".encode("ascii"))
         self.camera_pos_loc = glGetUniformLocation(self.program, "cameraPos".encode("ascii"))
         self.camera_view_loc = glGetUniformLocation(self.program, "cameraView".encode("ascii"))
-
         self.time_loc = glGetUniformLocation(self.program, "iTime".encode("ascii"))
-
         num_lights_loc = glGetUniformLocation(self.program, "iLights".encode("ascii"))
-
-        # start configuration
-        self.use()
-        glUniform1ui(num_lights_loc, ct.c_uint(num_lights))  # set number of light sources
+        num_textures_loc = glGetUniformLocation(self.program, "iTextures".encode("ascii"))
+        glUniform1i(num_lights_loc, ct.c_int32(num_lights))  # set number of light sources
+        glUniform1i(num_textures_loc, ct.c_int32(num_textures))  # set number of textures
+        for t_idx in range(num_textures):
+            tex_loc = glGetUniformLocation(self.program, f"objTexture{t_idx}".encode("ascii"))
+            glUniform1i(tex_loc, t_idx)
         self.un_use()
 
     def use(self) -> None:
@@ -157,5 +171,5 @@ class Shader:
         """
         self.use()
         t = int(1000 * (time.time() - self.start_time))
-        glUniform1ui(self.time_loc, t)
+        glUniform1i(self.time_loc, t)
         self.un_use()

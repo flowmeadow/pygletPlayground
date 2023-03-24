@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce : demo script
+@Introduce : Demo script; Three transformed models are lighted and shaded in different ways
 @File      : demo.py
 @Project   : pygletPlayground
 @Time      : 01.10.21 23:50
@@ -14,21 +14,29 @@ from glpg_flowmeadow.display.gl_screen import GLScreen
 from glpg_flowmeadow.rendering.lighting.lights import Lights
 from glpg_flowmeadow.rendering.methods import draw_coordinates, draw_text_2D
 from glpg_flowmeadow.rendering.models.model import Model
-from glpg_flowmeadow.rendering.models.model_generation.geometry import sphere, cube, cylinder
+from glpg_flowmeadow.rendering.models.model_generation.geometry import cube, cylinder, icosphere
+from glpg_flowmeadow.definitions import *
 
 
-class MyScreen(GLScreen):
+class DemoApp(GLScreen):
     """
     Demo application class containing a movable camera, three light sources and a
     sphere model that is transformed and shaded dynamically
     """
+
+    shader_names = {
+        GLPG_SHADER_FLAT: "Flat",
+        GLPG_SHADER_GOURAUD: "Gouraud",
+        GLPG_SHADER_BLINNPHONG: "Blinn-Phong",
+        GLPG_SHADER_TOON: "Toon",
+    }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.frame_count = 0
 
         # define shader list to use
-        self.shaders = ["flat", "gouraud", "blinn_phong", "toon"]
+        self.shaders = [GLPG_SHADER_FLAT, GLPG_SHADER_GOURAUD, GLPG_SHADER_BLINNPHONG, GLPG_SHADER_TOON]
         self.current_shader = self.shaders[0]
 
         # define camera
@@ -38,40 +46,41 @@ class MyScreen(GLScreen):
         self.lights = Lights()
         self.lights.add(  # circling around
             position=(1.0, 1.0, 0.0),
-            ambient=(1.0, 1.0, 0.5),
-            diffuse=(1.0, 1.0, 0.5),
-            specular=(1.0, 1.0, 0.5),
+            ambient=(1.0, 1.0, 0.0),
+            diffuse=(1.0, 1.0, 0.0),
+            specular=(1.0, 1.0, 0.0),
         )
         self.lights.add(  # at camera position
             position=(0.0, 0.0, 1.0),
-            ambient=(0.0, 0.5, 1.0),
-            diffuse=(0.0, 0.5, 1.0),
-            specular=(0.0, 0.5, 1.0),
+            ambient=(0.5, 0.5, 1.0),
+            diffuse=(0.5, 0.5, 1.0),
+            specular=(0.5, 0.5, 1.0),
         )
         self.lights.add(  # constant
             position=(0.0, 0.0, 1.0),
-            ambient=(1.0, 0.0, 0.5),
-            diffuse=(1.0, 0.0, 0.5),
-            specular=(1.0, 0.0, 0.5),
+            ambient=(1.0, 0.5, 0.5),
+            diffuse=(1.0, 0.5, 0.5),
+            specular=(1.0, 0.5, 0.5),
         )
 
         # define sphere model
-        vertices, indices = sphere(refinement_steps=4)
+        vertices, indices = icosphere(refinement_steps=4)
+
         self.sphere = Model(
             vertices=vertices,
             indices=indices,
-            shader_name=self.shaders,
-            color=(0.0, 0.4, 1.0),
+            shader=self.shaders,
+            color=(0.1, 0.2, 0.4),
             rotation=(1.0, 0.0, 0.0, 90.0),
             translation=(0.0, 0.0, 0.1),
             num_lights=self.lights.num_lights,
         )
-        vertices, indices = cube(refinement_steps=3)
+        vertices, indices = cube(refinement_steps=10)
         self.cube = Model(
             vertices=vertices,
             indices=indices,
-            shader_name=self.shaders,
-            color=(0.6, 0.4, 0.1),
+            shader=self.shaders,
+            color=(0.4, 0.2, 0.1),
             scale=0.1,
             rotation=(0.0, 0.0, 1.0, 45.0),
             num_lights=self.lights.num_lights,
@@ -81,8 +90,8 @@ class MyScreen(GLScreen):
         self.cylinder = Model(
             vertices=vertices,
             indices=indices,
-            shader_name=self.shaders,
-            color=(0.2, 0.8, 0.1),
+            shader=self.shaders,
+            color=(0.1, 0.4, 0.2),
             translation=(0.0, 0.5, 0.0),
             num_lights=self.lights.num_lights,
         )
@@ -93,6 +102,9 @@ class MyScreen(GLScreen):
         :return: None
         """
         self.sphere.update_camera(self.cam.camera_pos, self.cam.camera_view)  # update camera based on user inputs
+        self.cube.update_camera(self.cam.camera_pos, self.cam.camera_view)  # update camera based on user inputs
+        self.cylinder.update_camera(self.cam.camera_pos, self.cam.camera_view)  # update camera based on user inputs
+
         pass
 
     def draw_world(self) -> None:
@@ -135,7 +147,7 @@ class MyScreen(GLScreen):
         :return: None
         """
         draw_text_2D(10, self.height - 10, f"FPS: {self.current_fps:.2f}")
-        draw_text_2D(self.width - 300, self.height - 10, f"Current Shader: {self.current_shader.upper()}")
+        draw_text_2D(self.width - 300, self.height - 10, f"Current Shader: {self.shader_names[self.current_shader]}")
         draw_text_2D(self.width - 300, self.height - 35, f"Next in {(500 - self.frame_count) % 500} frames")
         if self.frame_count < 250:
             text = "Use ASDF to move and MOUSE to look around"
@@ -143,5 +155,5 @@ class MyScreen(GLScreen):
 
 
 if __name__ == "__main__":
-    demo = MyScreen(fullscreen=True)
+    demo = DemoApp(fullscreen=True)
     demo.run()

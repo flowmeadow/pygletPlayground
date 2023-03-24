@@ -1,6 +1,7 @@
 #version 130
 
 uniform mat4 modelMatrix;
+uniform sampler2D objTexture2;  // height map
 
 out vec2 uVec1;  // derivate vector for texturing without vertex seam
 out vec2 uVec2;  // derivate vector for texturing without vertex seam
@@ -16,9 +17,13 @@ void main ()
     uVec1 = fract(uVecA);
     uVec2 = fract(uVecA + 0.5) - 0.5;
 
+    // adjust vertex height
+    float height = 0.00 * texture2D(objTexture2, uVecA).x;  // looks only good for a detailed mesh
+
+
     // compute position, color and face normal
-    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-    fPosition = vec3(modelMatrix * gl_Vertex);
+    gl_Position = gl_ModelViewProjectionMatrix * (gl_Vertex + vec4(gl_Normal, 1.) * height);
+    fPosition = vec3(modelMatrix * gl_Vertex) + gl_Normal * height;
     fColor = vec3(gl_Color);
     fNormal = normalize(mat3(modelMatrix) * gl_Normal);
 }

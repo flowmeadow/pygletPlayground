@@ -1,0 +1,5 @@
+earth texture maps:
+http://planetpixelemporium.com/earth8081.html
+
+night sky texture map:
+https://svs.gsfc.nasa.gov/3572

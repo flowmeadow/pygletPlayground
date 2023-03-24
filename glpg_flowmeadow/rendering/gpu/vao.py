@@ -6,11 +6,11 @@
 @Time      : 31.08.21 23:50
 @Author    : flowmeadow
 """
+import numpy as np
 
 import ctypes as ct
 from typing import Optional
 
-import numpy as np
 from pyglet.gl import *
 
 
@@ -47,11 +47,13 @@ class VAO:
         self.vbo = GLuint()
         self.cbo = GLuint()
         self.nbo = GLuint()
+        self.tbo = GLuint()
 
         glGenBuffers(1, self.ibo)  # indices
         glGenBuffers(1, self.vbo)  # vertex
         glGenBuffers(1, self.cbo)  # color
         glGenBuffers(1, self.nbo)  # normals
+        glGenBuffers(1, self.tbo)  # texture coordinates
 
         # bind index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
@@ -86,7 +88,11 @@ class VAO:
             glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
             self.assign_vbo_data(data)
             glNormalPointer(GL_FLOAT, 0, None)
-        # TODO: Texture Coords are not defined yet. Do I miss something else?
+        elif attr_name == "texture_coords":
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+            glBindBuffer(GL_ARRAY_BUFFER, self.tbo)
+            self.assign_vbo_data(data)
+            glTexCoordPointer(2, GL_FLOAT, 0, None)
         else:
             raise NotImplementedError("Unknown ID")
         glBindVertexArray(0)

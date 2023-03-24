@@ -66,6 +66,27 @@ def rotation_matrix_from_vectors(vec1: np.ndarray, vec2: np.ndarray):
     return rotation_matrix
 
 
+def euler_angles_from_rotation_matrix(R: np.ndarray) -> np.ndarray:
+    """
+    compute Euler angles, given a rotation matrix
+    :param R: rotation matrix [3, 3]
+    :return: Euler angles [3,]
+    """
+    sy = np.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
+    singular = sy < 1e-6
+    if not singular:
+        x = np.arctan2(R[2, 1], R[2, 2])
+        y = np.arctan2(-R[2, 0], sy)
+        z = np.arctan2(R[1, 0], R[0, 0])
+    else:
+        x = np.arctan2(-R[1, 2], R[1, 1])
+        y = np.arctan2(-R[2, 0], sy)
+        z = 0
+    angles = np.array([x, y, z])
+    angles *= 180. / np.pi
+    return angles
+
+
 def compute_normals(indices: np.ndarray, vertices: np.ndarray) -> np.ndarray:
     """
     Given a vertex and index array, the normals for each vertex are computed.

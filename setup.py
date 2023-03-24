@@ -10,7 +10,7 @@ setup(
     version="0.1.6",
     license="MIT",
     packages=find_packages(include=["glpg_flowmeadow", "glpg_flowmeadow.*"]),
-    install_requires=["attrs==21.4.0", "numpy==1.23.1", "pyglet==1.5.26"],
+	install_requires=['attrs==21.4.0', 'glpg-flowmeadow==0.1.6', 'numpy==1.23.1', 'pyglet==1.5.26'],
     include_package_data=True,
     description="pyglet OpenGL playground",
     author="Florian Wiese",

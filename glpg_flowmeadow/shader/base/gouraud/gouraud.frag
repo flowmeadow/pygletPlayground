@@ -1,10 +1,11 @@
 #version 130
 
-out vec4 FragColor;
+in vec3 fColor;  // fragment color
 
-varying vec3 fcolor;
+out vec4 FragColor;  // final fragment color
+
 
 void main()
 {
-    FragColor = vec4(fcolor, 1.);
+    FragColor = vec4(fColor, 1.);
 }

@@ -1,35 +1,34 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce :
+@Introduce : Class that manages modifications and rendering of mesh-based objects
 @File      : model.py
 @Time      : 31.08.21 19:12
 @Author    : flowmeadow
 """
-
-from typing import List, Union
+from typing import List, Optional, Union
 
 import numpy as np
-from pyglet.gl import *
+from glpg_flowmeadow.definitions import *
 from glpg_flowmeadow.rendering.gpu.shader import Shader
 from glpg_flowmeadow.rendering.gpu.vao import VAO
+from glpg_flowmeadow.rendering.textures import load_texture, wrap_texture
 from glpg_flowmeadow.transformations.methods import compute_normals, flip_inside_out, rotate_vec
+from pyglet.gl import *
 
 
 class Model:
-
-    default_shader = "blinn_phong"
-    default_color = (0.0, 0.0, 1.0)
-
     def __init__(
         self,
         vertices: np.ndarray,
         indices: np.ndarray,
-        color: Union[np.ndarray, List[float]] = default_color,
+        color: Union[np.ndarray, List[float]] = None,
+        texture_coords: Optional[np.ndarray] = None,
+        texture_paths: Optional[Union[str, List[str]]] = None,
         rotation=(1.0, 0.0, 0.0, 0.0),
         scale=(1.0, 1.0, 1.0),
         translation=(0.0, 0.0, 0.0),
-        shader_name: Union[str, List[str]] = default_shader,
+        shader: Union[str, List[str], int, List[int]] = GLPG_SHADER_BLINNPHONG,
         inside_out=False,
         num_lights=1,
     ) -> None:
@@ -40,12 +39,27 @@ class Model:
         :param rotation: initial rotation parameter; rotation axis [0, 1, 2] and rotation angle [3] in degrees
         :param scale: initial scale parameter; one for each axis (x, y, z)
         :param translation: initial translation vector
-        :param shader_name: name of the shader or list of shader names for change during runtime
+        :param shader: name of the shader or list of shader names for change during runtime
         :param inside_out: if True, flip face normals
         :param num_lights: number of light sources in scene
         """
+        # Type conversions and input processing
+        if texture_paths is None:
+            texture_paths = []
 
-        # color
+        if isinstance(texture_paths, str):
+            texture_paths = [texture_paths]
+
+        if texture_coords is None and texture_paths:
+            texture_coords = wrap_texture(vertices)
+
+        # set default color
+        if texture_paths:
+            color = 0.0
+        elif color is None:
+            v_min, v_max = np.min(vertices), np.max(vertices)
+            color = (vertices - v_min) / (v_max - v_min)
+
         colors = self.format_color_array(color, vertices.shape[0])
         if inside_out:
             indices = flip_inside_out(indices)
@@ -68,18 +82,22 @@ class Model:
         self.vao.set_vbo("position", vertices)
         self.vao.set_vbo("color", colors[:, :3])
         self.vao.set_vbo("normal", normals)
+        if texture_coords is not None:
+            self.vao.set_vbo("texture_coords", texture_coords)
+
+        self.textures = []
+        for texture_path in texture_paths:
+            self.textures.append(load_texture(texture_path))
 
         # initialize model matrix and model operations list
         self.model_matrix = np.identity(4, dtype=np.float32)
         self.operations = []
 
         # initialize shader
-        self.shaders = dict()
-        if isinstance(shader_name, str):
-            shader_name = [shader_name]
-        for s in shader_name:
-            self.shaders[s] = Shader(s, num_lights=num_lights)
-        self.first_shader = shader_name[0]
+        if isinstance(shader, (str, int)):
+            shader = [shader]
+        self.shaders = {s: Shader(s, num_lights=num_lights, num_textures=len(self.textures)) for s in shader}
+        self.first_shader = shader[0]
 
     def rotate(self, angle: float, x: float, y: float, z: float):
         """
@@ -172,6 +190,13 @@ class Model:
         # perform transformations
         for operation, args in self.operations:
             operation(*args)
+
+        # bind texture
+        for idx, texture in enumerate(self.textures):
+            glActiveTexture(GL_TEXTURE0 + idx)
+            glBindTexture(GL_TEXTURE_2D, texture)
+        glActiveTexture(GL_TEXTURE0)  # reset
+
         # draw model
         self.vao.draw(num_indices, offset)
         glPopMatrix()
@@ -198,7 +223,9 @@ class Model:
         :return: color array (m, 3)
         """
         # type checking
-        if isinstance(color, (list, tuple)):
+        if isinstance(color, (int, float)):
+            color = np.array([float(color) for _ in range(3)])
+        elif isinstance(color, (list, tuple)):
             color = np.array(color)
         elif not isinstance(color, np.ndarray):
             raise ValueError("Color has to be a tuple, list or np.ndarray")
@@ -208,7 +235,7 @@ class Model:
         elif color.ndim == 2 and color.shape[1] == 3:
             pass
         else:
-            raise ValueError("Color array has to be 1 or 2 dimensional with each color having 3 entries")
+            raise ValueError("Wrong type for color")
         return color
 
     def update_camera(self, *args, **kwargs):
