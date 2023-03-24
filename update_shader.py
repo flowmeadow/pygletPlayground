@@ -13,7 +13,7 @@ import os
 def main():
     # iterate through shader directory
     print("UPDATE SHADER FILES:")
-    for directory, sub_dirs, files in os.walk("glpg_flowmeadow/shader"):
+    for directory, sub_dirs, files in os.walk("glpg/shader"):
         vert_txt, frag_txt = None, None
         # check fore each directory if there are a *.vert and *.frag file and read them
         if len(files) > 0:

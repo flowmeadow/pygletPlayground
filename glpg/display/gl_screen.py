@@ -11,8 +11,8 @@ from abc import ABCMeta, abstractmethod
 
 from pyglet.gl import *
 
-from glpg_flowmeadow.camera.camera import Camera
-from glpg_flowmeadow.display.base import Base
+from glpg.camera.camera import Camera
+from glpg.display.base import Base
 
 
 class GLScreen(Base):

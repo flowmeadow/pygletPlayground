@@ -11,7 +11,7 @@ from abc import abstractmethod
 from typing import Tuple
 
 import pyglet
-from glpg_flowmeadow.input.mouse import Mouse
+from glpg.input.mouse import Mouse
 from pyglet.window import key
 
 

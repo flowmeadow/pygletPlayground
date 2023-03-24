@@ -8,7 +8,7 @@
 """
 from typing import Optional, Tuple
 
-from glpg_flowmeadow.rendering.lighting.light import Light
+from glpg.rendering.lighting.light import Light
 from pyglet.gl import *
 
 

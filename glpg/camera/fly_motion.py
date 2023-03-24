@@ -9,9 +9,9 @@
 import numpy as np
 import pyglet.window
 from pyglet.window import key as gl_key
-from glpg_flowmeadow.transformations.methods import rotate_vec
+from glpg.transformations.methods import rotate_vec
 
-from glpg_flowmeadow.camera.camera import Camera
+from glpg.camera.camera import Camera
 
 
 class FlyMotion(Camera):

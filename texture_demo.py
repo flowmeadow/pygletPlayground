@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce : Demo script; textured model of the earth is lighted and shaded by the sun in space
+@Introduce : Demo script; textured model of the earth is lighted and shaded by the sun in space.
 @File      : texture_demo.py
 @Project   : pygletPlayground
 @Time      : 06.12.22 18:27
@@ -12,12 +12,12 @@ import os
 import numpy as np
 from pyglet.gl import *
 
-from glpg_flowmeadow.camera.fly_motion import FlyMotion
-from glpg_flowmeadow.display.gl_screen import GLScreen
-from glpg_flowmeadow.rendering.lighting.lights import Lights
-from glpg_flowmeadow.rendering.methods import draw_text_2D
-from glpg_flowmeadow.rendering.models.model import Model
-from glpg_flowmeadow.rendering.models.model_generation.geometry import icosphere
+from glpg.camera.fly_motion import FlyMotion
+from glpg.display.gl_screen import GLScreen
+from glpg.rendering.lighting.lights import Lights
+from glpg.rendering.methods import draw_text_2D
+from glpg.rendering.models.model import Model
+from glpg.rendering.models.model_generation.geometry import icosphere
 
 
 class HelloWorld(GLScreen):
@@ -146,7 +146,7 @@ class HelloWorld(GLScreen):
 
 
 if __name__ == "__main__":
-    os.system(f"python update_shader.py")
+    # os.system(f"python update_shader.py")
 
     demo = HelloWorld(fullscreen=True)
     demo.run()

@@ -10,7 +10,7 @@ import ctypes
 from typing import Optional, Tuple, Union
 
 import numpy as np
-from glpg_flowmeadow.rendering.methods import draw_light
+from glpg.rendering.methods import draw_light
 from pyglet.gl import *
 
 # define OpenGl update function and argument for each light parameter

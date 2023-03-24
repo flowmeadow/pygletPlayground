@@ -9,11 +9,11 @@
 from typing import List, Optional, Union
 
 import numpy as np
-from glpg_flowmeadow.definitions import *
-from glpg_flowmeadow.rendering.gpu.shader import Shader
-from glpg_flowmeadow.rendering.gpu.vao import VAO
-from glpg_flowmeadow.rendering.textures import load_texture, wrap_texture
-from glpg_flowmeadow.transformations.methods import compute_normals, flip_inside_out, rotate_vec
+from glpg.definitions import *
+from glpg.rendering.gpu.shader import Shader
+from glpg.rendering.gpu.vao import VAO
+from glpg.rendering.textures import load_texture, wrap_texture
+from glpg.transformations.methods import compute_normals, flip_inside_out, rotate_vec
 from pyglet.gl import *
 
 

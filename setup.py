@@ -6,11 +6,11 @@ os.system("pip freeze > requirements.txt")
 REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
 print(REQUIREMENTS)
 setup(
-    name="glpg_flowmeadow",
-    version="0.1.6",
+    name="glpg",
+    version="0.2.1",
     license="MIT",
-    packages=find_packages(include=["glpg_flowmeadow", "glpg_flowmeadow.*"]),
-	install_requires=['attrs==21.4.0', 'glpg-flowmeadow==0.1.6', 'numpy==1.23.1', 'pyglet==1.5.26'],
+    packages=find_packages(include=["glpg", "glpg.*"]),
+    install_requires=['attrs==21.4.0', 'numpy==1.23.1', 'Pillow==9.3.0', 'pyglet==1.5.26', 'python-utils==3.4.5'],
     include_package_data=True,
     description="pyglet OpenGL playground",
     author="Florian Wiese",

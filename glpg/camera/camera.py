@@ -12,8 +12,8 @@ from typing import Tuple, Union
 import numpy as np
 import pyglet.window
 
-from glpg_flowmeadow.rendering.methods import draw_cam
-from glpg_flowmeadow.transformations.methods import construct_T
+from glpg.rendering.methods import draw_cam
+from glpg.transformations.methods import construct_T
 
 
 class Camera:

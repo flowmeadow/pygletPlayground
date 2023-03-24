@@ -51,7 +51,7 @@ class Shader:
         elif isinstance(shader, int):
             name_list = ["flat", "gouraud", "blinn_phong", "toon"]
             shader_name = name_list[shader]
-            shader_txt = importlib.import_module(f"glpg_flowmeadow.shader.{model_base}.{shader_name}.{shader_name}")
+            shader_txt = importlib.import_module(f"glpg.shader.{model_base}.{shader_name}.{shader_name}")
 
             vs_src = shader_txt.vert_txt
             fs_src = shader_txt.frag_txt

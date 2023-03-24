@@ -9,13 +9,13 @@
 """
 import numpy as np
 
-from glpg_flowmeadow.camera.fly_motion import FlyMotion
-from glpg_flowmeadow.display.gl_screen import GLScreen
-from glpg_flowmeadow.rendering.lighting.lights import Lights
-from glpg_flowmeadow.rendering.methods import draw_coordinates, draw_text_2D
-from glpg_flowmeadow.rendering.models.model import Model
-from glpg_flowmeadow.rendering.models.model_generation.geometry import cube, cylinder, icosphere
-from glpg_flowmeadow.definitions import *
+from glpg.camera.fly_motion import FlyMotion
+from glpg.display.gl_screen import GLScreen
+from glpg.rendering.lighting.lights import Lights
+from glpg.rendering.methods import draw_coordinates, draw_text_2D
+from glpg.rendering.models.model import Model
+from glpg.rendering.models.model_generation.geometry import cube, cylinder, icosphere
+from glpg.definitions import *
 
 
 class DemoApp(GLScreen):
