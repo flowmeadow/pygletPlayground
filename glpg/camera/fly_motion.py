@@ -8,10 +8,10 @@
 """
 import numpy as np
 import pyglet.window
-from pyglet.window import key as gl_key
-from glpg.transformations.methods import rotate_vec
-
+import pyglet.window.key as gl_key
 from glpg.camera.camera import Camera
+from glpg.display.base import Base
+from glpg.transformations.methods import rotate_vec
 
 
 class FlyMotion(Camera):
@@ -22,17 +22,15 @@ class FlyMotion(Camera):
 
     def __init__(
         self,
-        window,
+        window: Base,
         **kwargs,
     ):
         """
-        :param display_center: the display center coordinate
-        :param camera_pos: position of the camera in world coordinates [3,]
-        :param camera_view: view direction of the camera in world coordinates [3,]
-        :param camera_up: vector pointing up from the camera world coordinates [3,]
+        :param window: current application window
         """
         self._mouse = window.mouse
         self._keys = window.keys
+        self.freeze = False  # if True, disables user control
         window.set_exclusive_mouse(True)
         super().__init__(**kwargs)
 
@@ -42,8 +40,9 @@ class FlyMotion(Camera):
         :param window: current window object
         :return:
         """
-        self.update_mouse_movement()
-        self.update_key_movement()
+        if not self.freeze:
+            self.update_mouse_movement()
+            self.update_key_movement()
 
     def update_key_movement(self):
         """
@@ -51,15 +50,15 @@ class FlyMotion(Camera):
         """
         keys = self._keys
         for key in keys:
-            if key in [gl_key.UP, gl_key.W]:
+            if key in [gl_key.W]:
                 self.camera_pos += 0.01 * self.camera_view  # go forward
-            if key in [gl_key.DOWN, gl_key.S]:
+            if key in [gl_key.S]:
                 self.camera_pos -= 0.01 * self.camera_view  # go backward
-            if key in [gl_key.RIGHT, gl_key.D]:
+            if key in [gl_key.D]:
                 side_vec = np.cross(self.camera_view, self.camera_up)
                 side_vec /= np.linalg.norm(side_vec)
                 self.camera_pos += 0.01 * side_vec  # go right
-            if key in [gl_key.LEFT, gl_key.A]:
+            if key in [gl_key.A]:
                 side_vec = np.cross(self.camera_view, self.camera_up)
                 side_vec /= np.linalg.norm(side_vec)
                 self.camera_pos -= 0.01 * side_vec  # go left

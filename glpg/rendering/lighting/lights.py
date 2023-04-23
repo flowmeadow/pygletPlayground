@@ -75,6 +75,7 @@ class Lights:
         light_id = self._light_ids[self.num_lights]
         self.num_lights += 1
         self.lights.append(Light(light_id, **kwargs))
+        return self
 
     def draw(self):
         """

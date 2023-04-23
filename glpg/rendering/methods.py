@@ -12,6 +12,9 @@ import numpy as np
 import pyglet
 from pyglet.gl import *
 
+from glpg.texturing.texture import Texture
+
+
 # def draw_text_3D(x_txt: int, y_txt: int, z_txt: int, text: str, color=(1.0, 1.0, 1.0)) -> None:
 #     """
 #     Draws a given string into the scene.
@@ -29,16 +32,21 @@ from pyglet.gl import *
 #         glutBitmapCharacter(font, ord(ch))
 
 
-def draw_text_2D(x_txt: int, y_txt: int, text: str) -> None:
+def draw_text_2D(x: int, y: int, text: str, color=(1.0, 1.0, 1.0, 1.0), **kwargs) -> None:
     """
     Draw a text onto the screen
-    :param x_txt: x-position
-    :param y_txt: y-position
+    :param x: x-position
+    :param y: y-position
     :param text: text string
+    :param color: color of the text; 3 or 4 values (RGB or RGBA)
     :return:
     """
+    color = [int(c * 255) for c in color]
+    if len(color) == 3:
+        color.append(1.0)
+
     label = pyglet.text.Label(
-        text, font_name="Consolas", font_size=12, x=x_txt, y=y_txt, anchor_x="left", anchor_y="top"
+        text, font_name="Consolas", font_size=12, x=x, y=y, anchor_x="left", anchor_y="top", color=color, **kwargs
     )
     label.draw()
 
@@ -144,3 +152,54 @@ def draw_cam(
     # draw a small coordinate system for reference
     draw_coordinates(rot_mat, pos, scale=0.2)
     glFlush()
+
+
+def draw_rectangle(x: int, y: int, w: int, h: int, color: list = None):
+    """
+    Draws a rectangle onto the screen
+    :param x: x position of the rectangle
+    :param y: y position of the rectangle
+    :param w: width of the rectangle
+    :param h: height of the rectangle
+    :param color: color of the rectangle; 3 or 4 values (RGB or RGBA)
+    :return:
+    """
+    # prepare color
+    if color is None:
+        color = [1.0, 1.0, 1.0, 1.0]
+    elif len(color) == 3:
+        color.append(1.0)
+    glColor4f(*color)
+
+    # draw rectangle
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    glVertex2f(x, y)
+    glTexCoord2f(0, 1)
+    glVertex2f(x, y + h)
+    glTexCoord2f(1, 1)
+    glVertex2f(x + w, y + h)
+    glTexCoord2f(1, 0)
+    glVertex2f(x + w, y)
+    glEnd()
+
+
+def draw_texture(x: int, y: int, w: int, h: int, texture: Texture):
+    """
+    Draws a texture onto the screen
+    :param x: x position of the texture rectangle
+    :param y: y position of the texture rectangle
+    :param w: width of the texture rectangle
+    :param h: height of the texture rectangle
+    :param texture: texture to project onto the rectangle
+    :return:
+    """
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, texture.location)
+    glBindSampler(0, texture.sampler_id)
+
+    draw_rectangle(x, y, w, h)
+
+    glBindTexture(GL_TEXTURE_2D, 0)
+    glBindSampler(0, 0)
+    glDisable(GL_TEXTURE_2D)

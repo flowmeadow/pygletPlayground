@@ -6,6 +6,7 @@
 @Time      : 31.08.21 19:12
 @Author    : flowmeadow
 """
+import ctypes.wintypes
 from typing import List, Optional, Union
 
 import numpy as np
@@ -13,6 +14,7 @@ from glpg.definitions import *
 from glpg.rendering.gpu.shader import Shader
 from glpg.rendering.gpu.vao import VAO
 from glpg.rendering.textures import load_texture, wrap_texture
+from glpg.texturing.texture import Texture
 from glpg.transformations.methods import compute_normals, flip_inside_out, rotate_vec
 from pyglet.gl import *
 
@@ -24,7 +26,14 @@ class Model:
         indices: np.ndarray,
         color: Union[np.ndarray, List[float]] = None,
         texture_coords: Optional[np.ndarray] = None,
-        texture_paths: Optional[Union[str, List[str]]] = None,
+        textures: Optional[
+            Union[
+                str,
+                np.ndarray,
+                ctypes.wintypes.UINT,
+                List[Union[str, np.ndarray, ctypes.wintypes.UINT]],
+            ]
+        ] = None,
         rotation=(1.0, 0.0, 0.0, 0.0),
         scale=(1.0, 1.0, 1.0),
         translation=(0.0, 0.0, 0.0),
@@ -36,6 +45,9 @@ class Model:
         :param vertices: object vertex coordinates (m, 3) [float]
         :param indices: object triangle vertex indices (n, 3) [int]
         :param color: color of the object (3,) or each individual vertex (n, 3)
+        :param texture_coords: texture coordinates for each vertex (n, 2)
+        :param textures: Numpy array of the texture, file path to the image object or location of the texture,
+        if already loaded
         :param rotation: initial rotation parameter; rotation axis [0, 1, 2] and rotation angle [3] in degrees
         :param scale: initial scale parameter; one for each axis (x, y, z)
         :param translation: initial translation vector
@@ -44,17 +56,17 @@ class Model:
         :param num_lights: number of light sources in scene
         """
         # Type conversions and input processing
-        if texture_paths is None:
-            texture_paths = []
+        if textures is None:
+            textures = []
 
-        if isinstance(texture_paths, str):
-            texture_paths = [texture_paths]
+        if isinstance(textures, str):
+            textures = [textures]
 
-        if texture_coords is None and texture_paths:
+        if texture_coords is None and textures:
             texture_coords = wrap_texture(vertices)
 
         # set default color
-        if texture_paths:
+        if textures:
             color = 0.0
         elif color is None:
             v_min, v_max = np.min(vertices), np.max(vertices)
@@ -86,8 +98,15 @@ class Model:
             self.vao.set_vbo("texture_coords", texture_coords)
 
         self.textures = []
-        for texture_path in texture_paths:
-            self.textures.append(load_texture(texture_path))
+        for texture in textures:
+            if isinstance(texture, (str, np.ndarray)):
+                self.textures.append(Texture(texture))
+            elif isinstance(texture, Texture):
+                self.textures.append(texture)
+            else:
+                raise NotImplementedError(
+                    f"Texture has to be a string, an array or a Texture object, not {type(texture)}"
+                )
 
         # initialize model matrix and model operations list
         self.model_matrix = np.identity(4, dtype=np.float32)
@@ -194,7 +213,9 @@ class Model:
         # bind texture
         for idx, texture in enumerate(self.textures):
             glActiveTexture(GL_TEXTURE0 + idx)
-            glBindTexture(GL_TEXTURE_2D, texture)
+            glBindTexture(GL_TEXTURE_2D, texture.location)
+            glBindSampler(idx, texture.sampler_id)
+
         glActiveTexture(GL_TEXTURE0)  # reset
 
         # draw model
@@ -203,6 +224,8 @@ class Model:
         glFlush()
 
         # reset
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glBindSampler(0, 0)
         self.shaders[shader_name].un_use()
         self.reset()
 

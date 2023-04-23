@@ -2,9 +2,9 @@ import os
 
 from setuptools import find_packages, setup
 
-os.system("pip freeze > requirements.txt")
-REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
-print(REQUIREMENTS)
+# os.system("pip freeze > requirements.txt")
+# REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
+# print(REQUIREMENTS)
 setup(
     name="glpg",
     version="0.2.1",

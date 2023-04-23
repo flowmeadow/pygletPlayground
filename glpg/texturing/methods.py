@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@Introduce : Standalone functions for texture image operations
-@File      : textures.py
+@Introduce : TODO
+@File      : methods.py
 @Project   : pygletPlayground
-@Time      : 07.12.22 19:08
+@Time      : 29.03.23 22:14
 @Author    : flowmeadow
 """
 import ctypes
@@ -118,47 +118,6 @@ def load_image_byte_array(texture: Union[np.ndarray, str]) -> ImageData:
     return img_data
 
 
-def load_texture(
-    texture: Union[np.ndarray, str], location: Optional[GLuint] = None, texture_parameters: List[Tuple[int, int]] = None
-):
-    """
-    Given a file path, image data loaded and stored as a texture on the GPU
-    :param texture: Numpy array or file path to the image object
-    :param location: location of the texture
-    :return: OpenGL location of the texture
-    """
-    img_data = load_image_byte_array(texture)
-    c_data, img_size, img_mode = img_data.c_data, img_data.img_size, img_data.img_mode
-    img_format = TEXTURE_FORMATS[img_mode]
-
-    if location is None:
-        location = GLuint()
-    glEnable(GL_TEXTURE_2D)
-
-    glGenTextures(1, location)
-    glBindTexture(GL_TEXTURE_2D, location)
-
-    defaults = {
-        GL_TEXTURE_WRAP_S: GL_REPEAT,
-        GL_TEXTURE_WRAP_T: GL_REPEAT,
-        GL_TEXTURE_MIN_FILTER: GL_LINEAR_MIPMAP_LINEAR,
-        GL_TEXTURE_MAG_FILTER: GL_LINEAR,
-    }
-    if isinstance(texture_parameters, list):
-        for (new_key, new_val) in texture_parameters:
-            defaults[new_key] = new_val
-    for key, val in defaults.items():
-        glTexParameteri(GL_TEXTURE_2D, key, val)
-
-    # glSamplerParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-
-    glTexImage2D(GL_TEXTURE_2D, 0, img_format, img_size[0], img_size[1], 0, img_format, GL_UNSIGNED_BYTE, c_data)
-    glGenerateMipmap(GL_TEXTURE_2D)
-    glDisable(GL_TEXTURE_2D)
-
-    return location
-
-
 def wrap_texture(vertices: np.ndarray, method: str = "cylinder") -> np.ndarray:
     """
     Computes texture coordinates for an array of vertices
@@ -179,80 +138,8 @@ def wrap_texture(vertices: np.ndarray, method: str = "cylinder") -> np.ndarray:
         z_min, z_max = min_vec[2], max_vec[2]
         z = 1.0 - (vertices[:, 2] - z_min) / (z_max - z_min)
         return np.array([r, z]).T
+    elif method == "xy-projection":
+        tex_coords = (vertices[:, :2] - min_vec[:2]) / (max_vec[:2] - min_vec[:2])
+        return tex_coords
     else:
         raise NotImplementedError()
-
-
-def generate_height_map(grid_size=(100, 100), seed=0, num_iter=100, counter=0, smoothness=0.5, experimental_mode=False):
-    max_size = 100
-    max_iter = 100
-
-    if max(grid_size) > max_size and not experimental_mode:
-        grid_size = [min(g, max_size) for g in grid_size]
-        warnings.warn(
-            f"\nGrid size of more than {max_size} is not recommended as the computation increases exponentially."
-            f"\nIf you want to compute with higher grid sizes, set the 'experimental_mode' flag. "
-        )
-    if num_iter > max_iter and not experimental_mode:
-        num_iter = max_iter
-        warnings.warn(
-            f"\nMore than {max_iter} iterations is not recommended as the computation increases exponentially."
-            f"\nIf you want to compute with more iterations, set the 'experimental_mode' flag. "
-        )
-    np.random.seed(seed)
-
-    x_arr, y_arr = np.arange(grid_size[0]) / grid_size[0], np.arange(grid_size[1]) / grid_size[1]
-    grid_pts = np.array(np.meshgrid(y_arr, x_arr)).T.reshape(-1, 2)
-    height_map = np.zeros(grid_size)
-    rand_pts = np.random.random((num_iter, 4))
-
-    rand_pts[:, 0] += 0.01 * np.sin(counter)
-    rand_pts[:, 1] += 0.01 * np.cos(counter)
-
-    p_1_arr, p_2_arr = rand_pts[:, :2], rand_pts[:, 2:]
-    for p_1, p_2 in zip(p_1_arr, p_2_arr):
-        heights = np.cross(p_2 - p_1, grid_pts - p_1) / np.linalg.norm(p_2 - p_1)
-        heights = np.tanh(heights * 2**(smoothness * 8))
-        height_map += heights.reshape(grid_size)
-    height_map = (height_map - np.min(height_map)) / (np.max(height_map) - np.min(height_map))
-    return height_map
-
-
-class ColorMap:
-    def __init__(self):
-        self.key_points = []
-        self.r_arr = []
-        self.g_arr = []
-        self.b_arr = []
-        self.cmap_arr = None
-
-    def add(self, value, color):
-        self.key_points.append(value)
-        self.r_arr.append(color[0])
-        self.g_arr.append(color[1])
-        self.b_arr.append(color[2])
-
-        self.cmap_arr = np.concatenate([[self.key_points], [self.r_arr], [self.g_arr], [self.b_arr]], axis=0).T
-
-    def arr2img(self, arr):
-        img_arr = np.zeros((*arr.shape, 3))
-        img_arr[:, :, 0] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 1])
-        img_arr[:, :, 1] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 2])
-        img_arr[:, :, 2] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 3])
-        img_arr[:, :, 2] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 3])
-
-        return img_arr
-
-
-class ClassicColorMap(ColorMap):
-    def __init__(self):
-        super().__init__()
-        super().add(0.00, [0.0, 0.0, 1.0])
-        super().add(0.25, [0.0, 1.0, 1.0])
-        super().add(0.50, [0.0, 1.0, 0.0])
-        super().add(0.75, [1.0, 1.0, 0.0])
-        super().add(1.00, [1.0, 0.0, 0.0])
-
-    def add(self, *args):
-        warnings.warn("Default colormaps don't have an add function")
-        pass

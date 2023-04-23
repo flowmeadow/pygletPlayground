@@ -19,6 +19,7 @@ class Base(pyglet.window.Window):
     """
     Base window class that handles setup, catches frame rates and user inputs
     """
+    restart_request = False  # set this flag to True, if the app shall be restarted
 
     # default settings for pyglet.window.Window
     _parent_kwargs = dict(
@@ -40,7 +41,7 @@ class Base(pyglet.window.Window):
 
     # default settings for custom window
     _child_kwargs = dict(
-        max_fps=120,
+        max_fps=120,  # TODO: Does not do anything... Why is 60 FPS the maximum?
     )
 
     def __init__(self, **kwargs):
@@ -120,10 +121,14 @@ class Base(pyglet.window.Window):
 
     def on_key_press(self, symbol: int, modifiers: int):
         """
-        Update pressed keyboard inputs
+        Update pressed keyboard inputs. By default, 'R', 'Q' and 'ESCAPE' close the window. 'R' also sets the
+        restart request flag. If those keys should be used differently, this method has to be overwritten by child.
         :param symbol: keyboard symbol (e.g. a, b, c, 1, 2, 3, ...)
         :param modifiers: keyboard modifiers (e.g. ALT, SHIFT, CTRL, ...)
         """
+        if symbol in [key.R]:
+            self.restart_request = True
+            self.close()
         if symbol in [key.Q, key.ESCAPE]:
             self.close()
         self.keys.add(symbol)

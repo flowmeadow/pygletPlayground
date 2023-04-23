@@ -11,8 +11,7 @@ import os
 from glpg.rendering.textures import img_file_to_byte_array
 
 
-def main():
-    base_path = "textures"
+def update_textures(base_path: str):
     path_list = [os.path.join(dir_path, f) for dir_path, _, file_names in os.walk(base_path) for f in file_names]
     for path in path_list:
         directory, base = os.path.split(path)
@@ -23,4 +22,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    base_path = "demo_textures/"
+    update_textures(base_path)

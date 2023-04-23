@@ -42,47 +42,51 @@ class HelloWorld(GLScreen):
         )
 
         texture_paths = [
-            "textures/8081_earthmap4k.iba",
-            "textures/8081_earthspec4k.iba",
-            "textures/8081_earthbump4k.iba",
-            "textures/8081_earthlights4k.iba",
+            "demo_textures/8081_earthmap4k.iba",
+            "demo_textures/8081_earthspec4k.iba",
+            "demo_textures/8081_earthbump4k.iba",
+            "demo_textures/8081_earthlights4k.iba",
         ]
 
         # define sphere model
         radius = 0.1
         vertices, indices = icosphere(radius=radius, refinement_steps=5)
 
+        # create earth sphere
         self.earth = Model(
             vertices,
             indices,
-            texture_paths=texture_paths,
-            shader="shader/earth",
+            textures=texture_paths,
+            shader="demo_shaders/earth",
             num_lights=self.lights.num_lights,
             scale=5.0,
         )
 
+        # create cloud sphere
         self.clouds = Model(
             vertices,
             indices,
-            texture_paths="textures/8081_earthclouds4k.iba",
-            shader="shader/clouds",
+            textures="demo_textures/8081_earthclouds4k.iba",
+            shader="demo_shaders/clouds",
             num_lights=self.lights.num_lights,
             scale=5.2,
         )
 
+        # create sun sphere
         self.sun = Model(
             vertices,
             indices,
-            shader="shader/sun",
+            shader="demo_shaders/sun",
             num_lights=self.lights.num_lights,
             scale=10.0,
         )
 
+        # create night sky sphere
         self.night_sky = Model(
             vertices,
             indices,
-            texture_paths="textures/nightsky4k.iba",
-            shader="shader/night_sky",
+            textures="demo_textures/nightsky4k.iba",
+            shader="demo_shaders/night_sky",
             num_lights=self.lights.num_lights,
             scale=2.0,
         )
@@ -103,13 +107,13 @@ class HelloWorld(GLScreen):
         :return: None
         """
 
-        # move light sources
+        # move sun
         light_speed = 0.002
         new_pos = 10.0 * np.array([np.sin(self.frame_count * light_speed), np.cos(self.frame_count * light_speed), 0.0])
         self.lights[0].update("position", new_pos)
-
-        # transform objects
         self.sun.translate(*new_pos)
+
+        # transform earth, clouds and night sky
 
         angle = 0.01 * self.frame_count
         self.earth.rotate(angle, 0.0, 0.0, -1.0)
@@ -124,12 +128,12 @@ class HelloWorld(GLScreen):
         self.night_sky.draw()  # draw night sky sphere
         glEnable(GL_DEPTH_TEST)
 
-        # draw_coordinates()
-        # self.lights.draw()
-
         self.earth.draw()
         self.clouds.draw()
         self.sun.draw()
+
+        # draw_coordinates()
+        # self.lights.draw()
 
         # update frame counter
         self.frame_count += 1

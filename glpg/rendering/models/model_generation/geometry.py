@@ -316,3 +316,94 @@ def cylinder(
             indices.append([offset_1 + i, offset_2 + i % angle_steps + 1, offset_1 + i % angle_steps + 1])
             indices.append([offset_1 + i, offset_2 + i, offset_2 + i % angle_steps + 1])
     return np.array(vertices), np.array(indices)
+
+
+def grid(width: int = 2, length: int = 3, size: float = None):
+    if not size:
+        size = 1 / max(width, length)
+
+    # compute quad vertices
+    x = np.arange((width + 1) * (length + 1)) % (width + 1)
+    y = np.arange((width + 1) * (length + 1)) // (width + 1)
+    z = np.zeros((width + 1) * (length + 1))
+    vertices = np.concatenate([[x], [y], [z]], axis=0).T
+
+    # compute quad indices
+    x_steps = np.arange(width)
+    y_steps = np.arange(0, (width + 1) * length, (width + 1))
+    steps = np.array(np.meshgrid(x_steps, y_steps)).T.reshape(-1, 2)
+    steps = np.sort(np.sum(steps, axis=1))
+    start_idcs = np.array([0, 1, width + 1, width + 2])  # quad indices of first quad
+    quad_idcs = np.full((len(steps), 4), start_idcs)
+    quad_idcs += np.full((len(steps), 4), np.array([steps]).T)
+
+    # compute triangle idcs and missing vertices
+    triangles = []
+    vert_offs = len(vertices)
+    for idx, quad in enumerate(quad_idcs):
+        # compute new vertex in quad center
+        new_vertex = np.mean(vertices[quad, :], axis=0)
+        vertices = np.concatenate([vertices, np.array([new_vertex])])
+
+        # compute triangle idcs
+        triangles.append([quad[0], quad[1], idx + vert_offs])
+        triangles.append([quad[1], quad[3], idx + vert_offs])
+        triangles.append([quad[3], quad[2], idx + vert_offs])
+        triangles.append([quad[2], quad[0], idx + vert_offs])
+
+    triangles = np.array(triangles)
+    return vertices * size, triangles
+
+
+def bars(width: int = 16, length: int = 16, gap=0.2, size: float = None):
+    # compute edge_size and gap_size
+    size = size if size else 1 / max(width, length)
+
+    edge_size = size * (1. - gap)
+    gap_size = size * gap
+
+    # define first two rectangles
+    base_vertices = np.array(
+        [[0.0, 0.0, 0.0], [edge_size, 0.0, 0.0], [edge_size, edge_size, 0.0], [0.0, edge_size, 0.0]]
+    )
+
+    # generate top faces
+    vertices = np.array([])
+    indices = np.array([])
+    side_indices = np.array([])
+
+    idx_counter = 0
+
+    offset = 4 * width * length
+    for x in range(0, width):
+        for y in range(0, length):
+            offset_vec = (edge_size + gap_size) * np.array([x, y, 0.0])
+
+            new_vertices = base_vertices + offset_vec
+            new_indices = np.array([[0, 1, 2], [2, 3, 0]]) + 4 * idx_counter
+            vertices = np.concatenate([vertices, new_vertices]) if vertices.size else new_vertices
+            indices = np.concatenate([indices, new_indices]) if indices.size else new_indices
+
+            new_side_1 = np.array([[1, 0, offset + 0], [offset + 0, offset + 1, 1]]) + 4 * idx_counter
+            new_side_2 = np.array([[2, 1, offset + 1], [offset + 1, offset + 2, 2]]) + 4 * idx_counter
+            new_side_3 = np.array([[2, 3, offset + 2], [offset + 2, offset + 3, 3]]) + 4 * idx_counter
+            new_side_4 = np.array([[3, 0, offset + 3], [offset + 3, offset + 0, 0]]) + 4 * idx_counter
+
+            sides = np.concatenate([new_side_1, new_side_2, new_side_3, new_side_4])
+            side_indices = np.concatenate([side_indices, sides]) if side_indices.size else sides
+
+            idx_counter += 1
+
+    # generate bottom faces
+    offset = len(vertices)
+    indices = np.concatenate([indices, indices + offset, side_indices])
+    vertices = np.concatenate([vertices, vertices + np.array([0., 0., -0.001])])
+
+    # generate side faces
+
+    vertices += 0.5 * gap_size * np.array([1., 1., 0.])
+    return vertices, indices
+
+
+if __name__ == "__main__":
+    grid()

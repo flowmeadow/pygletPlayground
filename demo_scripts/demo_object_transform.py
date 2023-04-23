@@ -65,7 +65,6 @@ class DemoApp(GLScreen):
 
         # define sphere model
         vertices, indices = icosphere(refinement_steps=4)
-
         self.sphere = Model(
             vertices=vertices,
             indices=indices,
@@ -75,7 +74,9 @@ class DemoApp(GLScreen):
             translation=(0.0, 0.0, 0.1),
             num_lights=self.lights.num_lights,
         )
-        vertices, indices = cube(refinement_steps=10)
+
+        # define cube model
+        vertices, indices = cube(refinement_steps=7)
         self.cube = Model(
             vertices=vertices,
             indices=indices,
@@ -86,6 +87,7 @@ class DemoApp(GLScreen):
             num_lights=self.lights.num_lights,
         )
 
+        # define cylinder model
         vertices, indices = cylinder()
         self.cylinder = Model(
             vertices=vertices,
