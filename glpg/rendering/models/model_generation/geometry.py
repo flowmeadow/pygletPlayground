@@ -355,53 +355,55 @@ def grid(width: int = 2, length: int = 3, size: float = None):
     return vertices * size, triangles
 
 
-def bars(width: int = 16, length: int = 16, gap=0.2, size: float = None):
+def bars(width: int = 16, length: int = 16, gap=0.2, size: float = None, bottom=True, sides=True):
     # compute edge_size and gap_size
     size = size if size else 1 / max(width, length)
 
-    edge_size = size * (1. - gap)
+    edge_size = size * (1.0 - gap)
     gap_size = size * gap
+    n = width * length
 
-    # define first two rectangles
-    base_vertices = np.array(
-        [[0.0, 0.0, 0.0], [edge_size, 0.0, 0.0], [edge_size, edge_size, 0.0], [0.0, edge_size, 0.0]]
-    )
+    # define top side vertices
+    x_base = np.array([[1.0, 0.0, 0.0]])
+    y_base = np.array([[0.0, 1.0, 0.0]])
+    w_vecs = size * (np.arange(n) % width)
+    l_vecs = size * (np.arange(n) // width)
+    tl_vecs = (x_base.T * w_vecs).T + (y_base.T * l_vecs).T
+    tr_vecs = tl_vecs + np.array([edge_size, 0.0, 0.0])
+    bl_vecs = tl_vecs + np.array([0.0, edge_size, 0.0])
+    br_vecs = tl_vecs + np.array([edge_size, edge_size, 0.0])
+    vertices = np.concatenate([tl_vecs, tr_vecs, bl_vecs, br_vecs])
+    vertices += 0.5 * gap_size * np.array([1.0, 1.0, 0.0])
 
-    # generate top faces
-    vertices = np.array([])
-    indices = np.array([])
-    side_indices = np.array([])
+    # define top triangles
+    indices_base = (np.array([[1, 1, 1]]).T * np.arange(n)).T
+    t0_indices = indices_base + n * np.array([0, 1, 2])
+    t1_indices = indices_base + n * np.array([3, 2, 1])
+    indices = np.concatenate([t0_indices, t1_indices])
 
-    idx_counter = 0
-
-    offset = 4 * width * length
-    for x in range(0, width):
-        for y in range(0, length):
-            offset_vec = (edge_size + gap_size) * np.array([x, y, 0.0])
-
-            new_vertices = base_vertices + offset_vec
-            new_indices = np.array([[0, 1, 2], [2, 3, 0]]) + 4 * idx_counter
-            vertices = np.concatenate([vertices, new_vertices]) if vertices.size else new_vertices
-            indices = np.concatenate([indices, new_indices]) if indices.size else new_indices
-
-            new_side_1 = np.array([[1, 0, offset + 0], [offset + 0, offset + 1, 1]]) + 4 * idx_counter
-            new_side_2 = np.array([[2, 1, offset + 1], [offset + 1, offset + 2, 2]]) + 4 * idx_counter
-            new_side_3 = np.array([[2, 3, offset + 2], [offset + 2, offset + 3, 3]]) + 4 * idx_counter
-            new_side_4 = np.array([[3, 0, offset + 3], [offset + 3, offset + 0, 0]]) + 4 * idx_counter
-
-            sides = np.concatenate([new_side_1, new_side_2, new_side_3, new_side_4])
-            side_indices = np.concatenate([side_indices, sides]) if side_indices.size else sides
-
-            idx_counter += 1
+    # add bottom vertices
+    if bottom or sides:
+        vertices = np.concatenate([vertices, vertices + np.array([0.0, 0.0, -0.001])])
 
     # generate bottom faces
-    offset = len(vertices)
-    indices = np.concatenate([indices, indices + offset, side_indices])
-    vertices = np.concatenate([vertices, vertices + np.array([0., 0., -0.001])])
+    if bottom:
+        indices = np.concatenate([indices, indices + 4 * n])
 
     # generate side faces
-
-    vertices += 0.5 * gap_size * np.array([1., 1., 0.])
+    if sides:
+        cube_indices = np.array(
+            [
+                [2, 3, 6],
+                [7, 6, 3],
+                [0, 2, 4],
+                [6, 4, 2],
+                [1, 0, 5],
+                [4, 5, 0],
+                [3, 1, 7],
+                [5, 7, 1],
+            ]
+        )
+        indices = np.concatenate([indices, *[indices_base + n * idcs for idcs in cube_indices]])
     return vertices, indices
 
 
