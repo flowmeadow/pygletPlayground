@@ -36,7 +36,7 @@ class DemoApp(GLScreen):
         self.frame_count = 0
 
         # define shader list to use
-        self.shaders = [GLPG_SHADER_FLAT, GLPG_SHADER_GOURAUD, GLPG_SHADER_BLINNPHONG, GLPG_SHADER_TOON]
+        self.shaders = list(self.shader_names.keys())
         self.current_shader = self.shaders[0]
 
         # define camera

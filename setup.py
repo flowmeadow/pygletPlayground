@@ -10,7 +10,7 @@ setup(
     version="0.2.1",
     license="MIT",
     packages=find_packages(include=["glpg", "glpg.*"]),
-    install_requires=['attrs==21.4.0', 'numpy==1.23.1', 'Pillow==9.3.0', 'pyglet==1.5.26', 'python-utils==3.4.5'],
+    install_requires=['attrs==21.4.0', 'numpy==1.23.1', 'Pillow==9.3.0', 'python-utils==3.4.5'],
     include_package_data=True,
     description="pyglet OpenGL playground",
     author="Florian Wiese",

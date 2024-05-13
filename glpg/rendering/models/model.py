@@ -160,7 +160,7 @@ class Model:
         scale_vec = [x, y, z]
 
         # build transformation matrix (4, 4)
-        scale_transform = np.identity(4, dtype=np.float)
+        scale_transform = np.identity(4, dtype=float)
         np.fill_diagonal(scale_transform[:3, :3], scale_vec)
 
         # update model matrix and operations list
@@ -177,7 +177,7 @@ class Model:
         trans_vec = [x, y, z]
 
         # build transformation matrix (4, 4)
-        trans_transform = np.identity(4, dtype=np.float)
+        trans_transform = np.identity(4, dtype=float)
         trans_transform[:-1, 3] = trans_vec
 
         # update model matrix and operations list
