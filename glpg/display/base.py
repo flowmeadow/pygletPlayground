@@ -41,7 +41,7 @@ class Base(pyglet.window.Window):
 
     # default settings for custom window
     _child_kwargs = dict(
-        max_fps=120,  # TODO: Does not do anything... Why is 60 FPS the maximum?
+        max_fps=60,  # TODO: Does not do anything... Why is 60 FPS the maximum?
     )
 
     def __init__(self, **kwargs):
@@ -117,7 +117,25 @@ class Base(pyglet.window.Window):
         :param dx: change in x-direction
         :param dy: change in y-direction
         """
-        self.mouse.update(x, y, dx, dy)
+        self.mouse.update_position(x, y, dx, dy)
+
+    # def on_mouse_press(self, x, y, button, modifiers):
+    #     self.mouse.keys.add(button)
+
+    # def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
+    #     self.mouse.keys.add(button)
+
+    def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        self.mouse.update_scroll(scroll_x, scroll_y)
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self.mouse.keys.add(buttons)
+        self.mouse.reset()
+        self.mouse.update_position(x, y, dx, dy)
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.mouse.keys.discard(button)
+
 
     def on_key_press(self, symbol: int, modifiers: int):
         """

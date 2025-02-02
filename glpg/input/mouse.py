@@ -19,8 +19,11 @@ class Mouse:
     y: int = attr.ib(default=0)
     dx: int = attr.ib(default=0)
     dy: int = attr.ib(default=0)
+    scroll_dx: int = attr.ib(default=0)
+    scroll_dy: int = attr.ib(default=0)
+    keys: set = attr.ib(default=set())
 
-    def update(self, x: int, y: int, dx: int, dy: int):
+    def update_position(self, x: int, y: int, dx: int, dy: int):
         """
         Update attributes
         :param x: x-position
@@ -39,3 +42,16 @@ class Mouse:
         """
         self.dx = 0
         self.dy = 0
+        self.scroll_dx = 0
+        self.scroll_dy = 0
+
+    def update_scroll(self, scroll_x: int, scroll_y: int):
+        """
+        Update attributes
+        :param x: x-position
+        :param y: y-position
+        :param dx: change in x-direction
+        :param dy: change in y-direction
+        """
+        self.scroll_dx += scroll_x
+        self.scroll_dy += scroll_y
