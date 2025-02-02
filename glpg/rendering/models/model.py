@@ -191,7 +191,7 @@ class Model:
         self.model_matrix = np.identity(4, dtype=np.float32)
         self.operations = []
 
-    def draw(self, shader_name: str = None, num_indices: int = None, offset=0):
+    def draw(self, shader_name: str = None, num_indices: int = None, offset=0, triangle_indices: list[int] = None):
         """
         Update shader, perform all transformations and draw model
         :param shader_name: select a shader
@@ -218,8 +218,29 @@ class Model:
 
         glActiveTexture(GL_TEXTURE0)  # reset
 
+        def find_consecutive_sets(lst):
+            """
+            TODO: In testing. Used only if specific triangles are selected for drawing to increase performance
+            :param lst:
+            :return:
+            """
+            arr = np.array(lst)
+            diff = np.diff(arr)
+            breaks = np.where(diff != 1)[0] + 1
+            start_indices = np.insert(breaks, 0, 0)
+            lengths = np.diff(np.append(start_indices, len(arr)))
+
+            result = list(zip([1, *arr[breaks]], lengths))
+
+            return result
+
         # draw model
-        self.vao.draw(num_indices, offset)
+        if triangle_indices is None:
+            self.vao.draw(num_indices, offset)
+        else:
+            for offset, num_indices in find_consecutive_sets(triangle_indices):
+                self.vao.draw(num_indices, offset)  # TODO: Testing
+
         glPopMatrix()
         glFlush()
 
