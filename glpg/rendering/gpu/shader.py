@@ -41,10 +41,12 @@ class Shader:
                 if file.endswith(".vert"):
                     with open(f"{shader_path}/{file}", "r") as f:
                         vs_src = ''.join(f.readlines())
+                    vs_src = self._handle_imports(vs_src, shader_path)
                     vs_cnt += 1
                 if file.endswith(".frag"):
                     with open(f"{shader_path}/{file}", "r") as f:
                         fs_src = ''.join(f.readlines())
+                    fs_src = self._handle_imports(fs_src, shader_path)
                     fs_cnt += 1
             if vs_cnt != 1 or fs_cnt != 1:
                 raise ImportError("Given directory must have exactly one vertex (.vert) and one fragment (.frag) file")
@@ -55,6 +57,7 @@ class Shader:
 
             vs_src = shader_txt.vert_txt
             fs_src = shader_txt.frag_txt
+            # TODO: load imports as well
         else:
             raise NotImplementedError()
 
@@ -173,3 +176,28 @@ class Shader:
         t = int(1000 * (time.time() - self.start_time))
         glUniform1i(self.time_loc, t)
         self.un_use()
+
+    def _handle_imports(self, shader_code, directory, _recursion=False):
+        lines = shader_code.splitlines()
+        processed_shader = ""
+        included_files = set()
+
+        for line in lines:
+            if line.startswith("#include"):
+                include_file = line.split('"')[1]
+
+                if include_file not in included_files:
+                    include_file_path = os.path.join(directory, include_file)
+                    if not os.path.exists(include_file_path):
+                        raise FileNotFoundError()
+                    with open(include_file_path, 'r') as file:
+                        include_code = file.read()
+                    processed_shader += self._handle_imports(include_code, directory, _recursion=True)
+                    processed_shader += "\n"
+                    included_files.add(include_file)
+            else:
+                processed_shader += line
+                if not _recursion:
+                    processed_shader += "\n"
+
+        return processed_shader
