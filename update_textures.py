@@ -8,7 +8,7 @@
 @Author    : flowmeadow
 """
 import os
-from glpg.rendering.textures import img_file_to_byte_array
+from glpg.texturing.methods import img_file_to_byte_array
 
 
 def update_textures(base_path: str):

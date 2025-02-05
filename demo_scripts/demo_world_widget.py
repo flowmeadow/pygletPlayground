@@ -30,9 +30,9 @@ class HelloWorldWidget(GLWidget):
         super().__init__(**kwargs)
 
         # placeholder
-        self.cam: Camera = None
-        self.lights: Lights = None
-        self.earth: Model = None
+        self.cam: Camera | None = None
+        self.lights: Lights | None = None
+        self.earth: Model | None = None
 
         # variables
         self.frame_count = 0

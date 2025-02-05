@@ -7,6 +7,8 @@
 @Time      : 24.03.23 19:43
 @Author    : flowmeadow
 """
+import warnings
+
 import numpy as np
 from glpg.camera.fly_motion import FlyMotion
 from glpg.display.gl_screen import GLScreen
@@ -15,10 +17,95 @@ from glpg.rendering.lighting.lights import Lights
 from glpg.rendering.methods import draw_coordinates, draw_text_2D, draw_texture
 from glpg.rendering.models.model import Model
 from glpg.rendering.models.model_generation.geometry import bars, grid
-from glpg.rendering.textures import ClassicColorMap, generate_height_map
 from glpg.texturing.methods import wrap_texture
 from glpg.texturing.texture import Texture
 from pyglet.gl import *
+
+
+def generate_height_map(
+    grid_size=(100, 100),
+    seed=0,
+    num_iter=100,
+    counter=0,
+    smoothness=0.5,
+    experimental_mode=False,
+):
+    max_size = 100
+    max_iter = 100
+
+    if max(grid_size) > max_size and not experimental_mode:
+        grid_size = [min(g, max_size) for g in grid_size]
+        warnings.warn(
+            f"\nGrid size of more than {max_size} is not recommended as the computation increases exponentially."
+            f"\nIf you want to compute with higher grid sizes, set the 'experimental_mode' flag. "
+        )
+    if num_iter > max_iter and not experimental_mode:
+        num_iter = max_iter
+        warnings.warn(
+            f"\nMore than {max_iter} iterations is not recommended as the computation increases exponentially."
+            f"\nIf you want to compute with more iterations, set the 'experimental_mode' flag. "
+        )
+    np.random.seed(seed)
+
+    x_arr, y_arr = (
+        np.arange(grid_size[0]) / grid_size[0],
+        np.arange(grid_size[1]) / grid_size[1],
+    )
+    grid_pts = np.array(np.meshgrid(y_arr, x_arr)).T.reshape(-1, 2)
+    height_map = np.zeros(grid_size)
+    rand_pts = np.random.random((num_iter, 4))
+
+    rand_pts[:, 0] += 0.01 * np.sin(counter)
+    rand_pts[:, 1] += 0.01 * np.cos(counter)
+
+    p_1_arr, p_2_arr = rand_pts[:, :2], rand_pts[:, 2:]
+    for p_1, p_2 in zip(p_1_arr, p_2_arr):
+        heights = np.cross(p_2 - p_1, grid_pts - p_1) / np.linalg.norm(p_2 - p_1)
+        heights = np.tanh(heights * 2 ** (smoothness * 8))
+        height_map += heights.reshape(grid_size)
+    height_map = (height_map - np.min(height_map)) / (
+        np.max(height_map) - np.min(height_map)
+    )
+    return height_map
+
+class ColorMap:
+    def __init__(self):
+        self.key_points = []
+        self.r_arr = []
+        self.g_arr = []
+        self.b_arr = []
+        self.cmap_arr = None
+
+    def add(self, value, color):
+        self.key_points.append(value)
+        self.r_arr.append(color[0])
+        self.g_arr.append(color[1])
+        self.b_arr.append(color[2])
+
+        self.cmap_arr = np.concatenate([[self.key_points], [self.r_arr], [self.g_arr], [self.b_arr]], axis=0).T
+
+    def arr2img(self, arr):
+        img_arr = np.zeros((*arr.shape, 3))
+        img_arr[:, :, 0] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 1])
+        img_arr[:, :, 1] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 2])
+        img_arr[:, :, 2] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 3])
+        img_arr[:, :, 2] = np.interp(arr, self.cmap_arr[:, 0], self.cmap_arr[:, 3])
+
+        return img_arr
+
+
+class ClassicColorMap(ColorMap):
+    def __init__(self):
+        super().__init__()
+        super().add(0.00, [0.0, 0.0, 1.0])
+        super().add(0.25, [0.0, 1.0, 1.0])
+        super().add(0.50, [0.0, 1.0, 0.0])
+        super().add(0.75, [1.0, 1.0, 0.0])
+        super().add(1.00, [1.0, 0.0, 0.0])
+
+    def add(self, *args):
+        warnings.warn("Default colormaps don't have an add function")
+        pass
 
 
 class DemoApp(GLScreen):
@@ -28,7 +115,7 @@ class DemoApp(GLScreen):
     """
 
     def __init__(self, grid_size, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(max_fps=60, **kwargs)
         self.frame_count = 0
         self.animation_speed = 0
         self.param_pointer = 0
@@ -37,7 +124,9 @@ class DemoApp(GLScreen):
         self.grid_options = list(2 ** np.arange(5)) + list(range(32, 97, 16))
 
         # define camera
-        self.cam = FlyMotion(self, camera_pos=(1.0, 1.0, 1.0), camera_view=(-1.0, -1.0, -1.0))
+        self.cam = FlyMotion(
+            self, camera_pos=(1.0, 1.0, 1.0), camera_view=(-1.0, -1.0, -1.0)
+        )
 
         # define light sources
         self.lights = Lights().add(position=(0.5, 0.5, 1.0))
@@ -86,7 +175,9 @@ class DemoApp(GLScreen):
         handle pygame events and do other stuff before drawing
         :return: None
         """
-        self.grid.update_camera(self.cam.camera_pos, self.cam.camera_view)  # update camera based on user inputs
+        self.grid.update_camera(
+            self.cam.camera_pos, self.cam.camera_view
+        )  # update camera based on user inputs
 
         # generate new heightmap
         height_array = generate_height_map(
@@ -109,8 +200,12 @@ class DemoApp(GLScreen):
         # update textures and texture options
         self.height_tex.load(height_array)
         self.color_tex.load(color_array)
-        self.height_tex.update_param(GL_TEXTURE_MAG_FILTER, self.menu.get_option("height_tex_filter"))
-        self.color_tex.update_param(GL_TEXTURE_MAG_FILTER, self.menu.get_option("color_tex_filter"))
+        self.height_tex.update_param(
+            GL_TEXTURE_MAG_FILTER, self.menu.get_option("height_tex_filter")
+        )
+        self.color_tex.update_param(
+            GL_TEXTURE_MAG_FILTER, self.menu.get_option("color_tex_filter")
+        )
 
         # check menu for user input
         self.menu.update()
@@ -141,9 +236,21 @@ class DemoApp(GLScreen):
 
         # draw the two textures
         max_edge_size = self.panel_width // 2  # maximum image edge size
-        img_size = np.array(self.grid_size) * np.min(max_edge_size / np.array(self.grid_size))
-        draw_texture(self.width - 2 * img_size[0], self.height - img_size[1], *img_size, self.height_tex)
-        draw_texture(self.width - img_size[0], self.height - img_size[1], *img_size, self.color_tex)
+        img_size = np.array(self.grid_size) * np.min(
+            max_edge_size / np.array(self.grid_size)
+        )
+        draw_texture(
+            self.width - 2 * img_size[0],
+            self.height - img_size[1],
+            *img_size,
+            self.height_tex,
+        )
+        draw_texture(
+            self.width - img_size[0],
+            self.height - img_size[1],
+            *img_size,
+            self.color_tex,
+        )
 
         # draw current FPS
         draw_text_2D(10, self.height - 10, f"FPS: {self.current_fps:.2f}")
@@ -253,6 +360,8 @@ if __name__ == "__main__":
     while keep_running:
         demo = DemoApp(grid_size, fullscreen=True)  # create window object
         demo.run()  # run it
-        grid_size = demo.menu.get_option("grid_width"), demo.menu.get_option("grid_height")  # get selected grid size
+        grid_size = demo.menu.get_option("grid_width"), demo.menu.get_option(
+            "grid_height"
+        )  # get selected grid size
         keep_running = demo.restart_request  # set to True if app was restarted
         del demo  # delete old object

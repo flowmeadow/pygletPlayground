@@ -17,6 +17,7 @@ from typing import Tuple, Optional, Union, List
 import numpy as np
 import PIL.Image
 from pyglet.gl import *
+from sys import platform
 
 TEXTURE_FORMATS = {"RGB": GL_RGB, "L": GL_DEPTH_COMPONENT}
 
@@ -43,7 +44,7 @@ def img_file_to_byte_array(path: str, save: bool = False) -> ImageData:
     """
     # open image and convert it to a numpy array
     img = PIL.Image.open(path)  # .jpg, .bmp, etc. also work
-    img_data = np.array(list(img.getdata()), np.int8)
+    img_data = np.array(list(img.getdata()), np.uint8)
 
     img_size, img_mode = img.size, img.mode
     data_type = np.ubyte  # default
@@ -98,7 +99,6 @@ def load_image_byte_array(texture: Union[np.ndarray, str]) -> ImageData:
 
     elif isinstance(texture, str):
         _, extension = os.path.splitext(texture)
-
         # load from image file
         if extension in [".jpg", ".jpeg", ".png", ".bmp"]:
             img_data = img_file_to_byte_array(texture)

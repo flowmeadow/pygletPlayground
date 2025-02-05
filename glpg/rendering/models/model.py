@@ -13,7 +13,7 @@ import numpy as np
 from glpg.definitions import *
 from glpg.rendering.gpu.shader import Shader
 from glpg.rendering.gpu.vao import VAO
-from glpg.rendering.textures import load_texture, wrap_texture
+from glpg.texturing.methods import wrap_texture
 from glpg.texturing.texture import Texture
 from glpg.transformations.methods import compute_normals, flip_inside_out, rotate_vec
 from pyglet.gl import *
@@ -31,7 +31,7 @@ class Model:
                 str,
                 np.ndarray,
                 ctypes.wintypes.UINT,
-                List[Union[str, np.ndarray, ctypes.wintypes.UINT]],
+                List[Union[str, np.ndarray, ctypes.wintypes.UINT, Texture]],
             ]
         ] = None,
         rotation=(1.0, 0.0, 0.0, 0.0),
